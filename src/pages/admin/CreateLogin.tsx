@@ -1,0 +1,113 @@
+import { useEffect, useState } from 'react'
+import { getGroupsWithTeacher, createStudent } from '@/lib/data'
+import type { Group } from '@/types'
+import { UserPlus } from 'lucide-react'
+import toast from 'react-hot-toast'
+
+export default function AdminCreateLogin() {
+  const [groups, setGroups] = useState<(Group & { teacher?: unknown })[]>([])
+  const [groupId, setGroupId] = useState('')
+  const [email, setEmail] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [password, setPassword] = useState('student123')
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    getGroupsWithTeacher().then(setGroups)
+  }, [])
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!groupId) {
+      toast.error('Guruhni tanlang')
+      return
+    }
+    setSubmitting(true)
+    const result = await createStudent(email.trim(), firstName.trim(), lastName.trim(), groupId, password)
+    setSubmitting(false)
+    if ('error' in result) {
+      toast.error(result.error)
+      return
+    }
+    toast.success('O\'quvchi va login yaratildi')
+    setEmail('')
+    setFirstName('')
+    setLastName('')
+    setPassword('student123')
+  }
+
+  return (
+    <div>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">O'quvchilarga login yaratish</h1>
+
+      <div className="max-w-md bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Guruh</label>
+            <select
+              value={groupId}
+              onChange={(e) => setGroupId(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              required
+            >
+              <option value="">Tanlang</option>
+              {groups.map((g) => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Familiya</label>
+            <input
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ism</label>
+            <input
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email (Gmail — login)</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="oquvchi@gmail.com"
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Parol</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-medium disabled:opacity-50"
+          >
+            <UserPlus className="w-5 h-5" />
+            {submitting ? 'Yaratilmoqda...' : 'Login yaratish'}
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
