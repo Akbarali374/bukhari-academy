@@ -59,11 +59,21 @@ Brauzerda: http://localhost:5173
 
 Loyiha demo rejimda ishlaydi - barcha ma'lumotlar brauzer localStorage da saqlanadi.
 
-**Admin kirish:**
+### 🔑 Test Loginlar:
+
+**Admin:**
 - Email: admin@bukhari.uz
 - Parol: [Admin bilan bog'laning]
 
-**O'quvchi/O'qituvchi:**
+**Demo O'qituvchi:**
+- Email: teacher@bukhari.uz
+- Parol: teacher123
+
+**Demo O'quvchi:**
+- Email: student@bukhari.uz
+- Parol: student123
+
+**Yangi foydalanuvchilar:**
 - Admin panel orqali yaratiladi
 - Default parol: student123
 

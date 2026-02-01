@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import type { Profile, Role } from '@/types'
 import { supabase } from '@/lib/supabase'
+import { globalDb } from '@/lib/globalDb'
 import {
   demoGetSession,
   demoLogin as demoLoginFn,
@@ -84,6 +85,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
       return () => subscription.unsubscribe()
     } else {
+      // Check for saved session first
+      const savedSession = localStorage.getItem('bukhari_session')
+      if (savedSession) {
+        try {
+          const authUser = JSON.parse(savedSession)
+          setUser(authUser)
+          setLoading(false)
+          return
+        } catch (error) {
+          console.error('Session parse error:', error)
+          localStorage.removeItem('bukhari_session')
+        }
+      }
+      
+      // Fallback to demo session
       const session = demoGetSession()
       if (session) setUser(toAuthUser(session))
       setLoading(false)
@@ -104,12 +120,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         return { ok: false, error: 'Profil topilmadi' }
       } else {
-        const session = demoLoginFn(email, password)
-        if (session) {
-          setUser(toAuthUser(session))
-          return { ok: true, role: session.role }
+        // Use global database for login
+        try {
+          const profile = await globalDb.login(email, password)
+          if (profile) {
+            const authUser = { id: profile.id, email: profile.email, role: profile.role, profile }
+            setUser(authUser)
+            // Save session to localStorage for persistence
+            localStorage.setItem('bukhari_session', JSON.stringify(authUser))
+            return { ok: true, role: profile.role }
+          }
+          return { ok: false, error: 'Email yoki parol noto\'g\'ri' }
+        } catch (error) {
+          console.error('Login error:', error)
+          return { ok: false, error: 'Kirish xatosi yuz berdi' }
         }
-        return { ok: false, error: 'Email yoki parol noto\'g\'ri' }
       }
     },
     []
@@ -117,7 +142,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     if (SUPABASE_ENABLED) await supabase!.auth.signOut()
-    else demoLogoutFn()
+    else {
+      demoLogoutFn()
+      localStorage.removeItem('bukhari_session')
+    }
     setUser(null)
   }, [])
 

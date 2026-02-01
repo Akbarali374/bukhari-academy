@@ -22,8 +22,35 @@ const defaultAdmin: Profile = {
 function getProfiles(): Profile[] {
   const raw = localStorage.getItem(PROFILES_KEY)
   if (!raw) {
-    const initial = [defaultAdmin]
+    const initial = [
+      defaultAdmin,
+      // Demo o'qituvchi
+      {
+        id: 'teacher-demo-1',
+        email: 'teacher@bukhari.uz',
+        first_name: 'Demo',
+        last_name: 'Ustoz',
+        role: 'teacher' as Role,
+        group_id: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      // Demo o'quvchi
+      {
+        id: 'student-demo-1',
+        email: 'student@bukhari.uz',
+        first_name: 'Demo',
+        last_name: 'O\'quvchi',
+        role: 'student' as Role,
+        group_id: 'group-demo-1',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+    ]
     localStorage.setItem(PROFILES_KEY, JSON.stringify(initial))
+    // Demo parollar
+    localStorage.setItem('bukhari_pwd_teacher-demo-1', 'teacher123')
+    localStorage.setItem('bukhari_pwd_student-demo-1', 'student123')
     return initial
   }
   return JSON.parse(raw)
@@ -35,7 +62,19 @@ function setProfiles(profiles: Profile[]) {
 
 function getGroups(): Group[] {
   const raw = localStorage.getItem(GROUPS_KEY)
-  return raw ? JSON.parse(raw) : []
+  if (!raw) {
+    const initial = [
+      {
+        id: 'group-demo-1',
+        name: 'Demo Guruh',
+        teacher_id: 'teacher-demo-1',
+        created_at: new Date().toISOString()
+      }
+    ]
+    localStorage.setItem(GROUPS_KEY, JSON.stringify(initial))
+    return initial
+  }
+  return JSON.parse(raw)
 }
 
 function setGroups(groups: Group[]) {
