@@ -1,8 +1,10 @@
+/// <reference types="vite/client" />
+
 import type { Profile, Group, Grade, News, Homework, Comment } from '@/types'
 import { supabase } from './supabase'
 import { demoDb } from './demoDb'
 
-const SUPABASE_ENABLED = !!import.meta.env.VITE_SUPABASE_URL
+const SUPABASE_ENABLED = !!(import.meta.env?.VITE_SUPABASE_URL)
 
 // Demo mode: use demoDb. Supabase mode: use supabase (we'll add later or use from context)
 export async function getProfiles(): Promise<Profile[]> {

@@ -108,7 +108,7 @@ export interface DemoAuthUser {
 }
 
 export function demoLogin(email: string, password: string): DemoAuthUser | null {
-  if (email === 'admin@bukhari.uz' && password === 'admin123') {
+  if (email === 'admin@bukhari.uz' && password === 'admin.sanobarhon.2003') {
     const profiles = getProfiles()
     let admin = profiles.find((p) => p.role === 'admin' && p.email === email)
     if (!admin) {
