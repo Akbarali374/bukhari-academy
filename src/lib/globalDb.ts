@@ -16,6 +16,7 @@ class GlobalDatabaseService {
   private cache: GlobalDatabase | null = null
   private cacheTime = 0
   private readonly CACHE_DURATION = 30000 // 30 seconds
+  private readonly MAX_USERS_JSON = 500 // JSON fayl uchun maksimal foydalanuvchilar
 
   async loadDatabase(): Promise<GlobalDatabase> {
     const now = Date.now()
@@ -24,6 +25,12 @@ class GlobalDatabaseService {
     }
 
     try {
+      // Development rejimida to'g'ridan-to'g'ri fallback ishlatamiz
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.log('🔧 Development rejimi - localStorage ishlatilmoqda')
+        return this.getFallbackData()
+      }
+
       const response = await fetch(this.dbUrl + '?t=' + now)
       if (!response.ok) {
         throw new Error('Database yuklanmadi')
@@ -31,6 +38,12 @@ class GlobalDatabaseService {
       const data = await response.json()
       this.cache = data
       this.cacheTime = now
+      
+      // Agar foydalanuvchilar soni ko'p bo'lsa, ogohlantirish
+      if (data.profiles.length > this.MAX_USERS_JSON) {
+        console.warn(`⚠️ ${data.profiles.length} foydalanuvchi mavjud. Professional database (Supabase) tavsiya etiladi.`)
+      }
+      
       return data
     } catch (error) {
       console.error('Database xatosi:', error)
@@ -42,10 +55,15 @@ class GlobalDatabaseService {
   private getFallbackData(): GlobalDatabase {
     const stored = localStorage.getItem('bukhari_global_db')
     if (stored) {
-      return JSON.parse(stored)
+      try {
+        return JSON.parse(stored)
+      } catch (error) {
+        console.error('localStorage parse error:', error)
+      }
     }
     
-    return {
+    // Default ma'lumotlar
+    const defaultData: GlobalDatabase = {
       profiles: [
         {
           id: 'admin-1',
@@ -60,19 +78,39 @@ class GlobalDatabaseService {
       ],
       groups: [],
       grades: [],
-      news: [],
+      news: [
+        {
+          id: 'news-1',
+          title: 'Bukhari Academy ga xush kelibsiz!',
+          content: 'O\'quv markazimizga xush kelibsiz. Bu yerda siz o\'z baholaringizni, uyga vazifalaringizni va yangiliklar bilan tanishishingiz mumkin.',
+          author_id: 'admin-1',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      ],
       homework: [],
       comments: [],
       passwords: {
         'admin-1': 'admin.sanobarhon.2003'
       }
     }
+    
+    // localStorage'ga saqlash
+    localStorage.setItem('bukhari_global_db', JSON.stringify(defaultData))
+    return defaultData
   }
 
   async saveToLocal(data: GlobalDatabase): Promise<void> {
+    // Har doim localStorage'ga saqlash
     localStorage.setItem('bukhari_global_db', JSON.stringify(data))
     this.cache = data
     this.cacheTime = Date.now()
+    
+    // Production'da JSON faylni yangilash uchun API chaqiruvi (kelajakda)
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      console.log('📡 Production rejimi - ma\'lumotlar localStorage\'ga saqlandi')
+      // Bu yerda kelajakda server API chaqiruvi bo'lishi mumkin
+    }
   }
 
   // Login function

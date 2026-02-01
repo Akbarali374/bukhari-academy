@@ -33,8 +33,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data } = await supabase!.from('profiles').select('*').eq('id', user.id).single()
       if (data) setUser((u) => (u ? { ...u, profile: data as Profile } : null))
     } else {
-      const session = demoGetSession()
-      if (session) setUser({ id: session.id, email: session.email, role: session.role, profile: session.profile })
+      try {
+        const profiles = await globalDb.getProfiles()
+        const profile = profiles.find(p => p.id === user.id)
+        if (profile) {
+          setUser(u => u ? { ...u, profile } : null)
+        }
+      } catch (error) {
+        console.error('Profile refresh error:', error)
+        // Fallback to demo session
+        const session = demoGetSession()
+        if (session) setUser({ id: session.id, email: session.email, role: session.role, profile: session.profile })
+      }
     }
   }, [user])
 

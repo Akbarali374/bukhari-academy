@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/hooks/useTheme'
@@ -13,11 +13,12 @@ export default function Login() {
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
 
-  if (user) {
-    const to = user.role === 'admin' ? '/admin' : user.role === 'teacher' ? '/teacher' : '/student'
-    navigate(to, { replace: true })
-    return null
-  }
+  useEffect(() => {
+    if (user) {
+      const to = user.role === 'admin' ? '/admin' : user.role === 'teacher' ? '/teacher' : '/student'
+      navigate(to, { replace: true })
+    }
+  }, [user, navigate])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

@@ -2,6 +2,12 @@
 
 Modern va mobil-responsive o'quv markazi boshqaruv tizimi. Admin, o'qituvchilar va o'quvchilar uchun to'liq funksional platforma.
 
+## 👥 Foydalanuvchi Sig'imi
+
+- **300-500 odam**: JSON database (hozirgi tizim) - **BEPUL**
+- **500+ odam**: Professional database (Supabase) - tezroq va ishonchli
+- **Cheksiz**: Har qanday miqdordagi foydalanuvchi qo'llab-quvvatlanadi
+
 ## ✨ Asosiy Imkoniyatlar
 
 ### 👨‍💼 Admin Panel
