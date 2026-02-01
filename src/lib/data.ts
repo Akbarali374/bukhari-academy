@@ -4,12 +4,12 @@ import type { Profile, Group, Grade, News, Homework, Comment } from '@/types'
 import { supabase } from './supabase'
 import { demoDb } from './demoDb'
 
-const SUPABASE_ENABLED = !!(import.meta.env?.VITE_SUPABASE_URL)
+const SUPABASE_ENABLED = !!(typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_SUPABASE_URL)
 
 // Demo mode: use demoDb. Supabase mode: use supabase (we'll add later or use from context)
 export async function getProfiles(): Promise<Profile[]> {
-  if (!SUPABASE_ENABLED) return demoDb.getProfiles()
-  const { data } = await supabase!.from('profiles').select('*').order('created_at', { ascending: false })
+  if (!SUPABASE_ENABLED || !supabase) return demoDb.getProfiles()
+  const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false })
   return (data ?? []) as Profile[]
 }
 
