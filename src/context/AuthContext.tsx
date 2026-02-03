@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import type { Profile, Role } from '@/types'
 import { supabase } from '@/lib/supabase'
-import { firebaseDb } from '@/lib/firebaseDb'
+import { globalDb } from '@/lib/globalDb'
 import {
   demoGetSession,
   demoLogin as demoLoginFn,
@@ -130,9 +130,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         return { ok: false, error: 'Profil topilmadi' }
       } else {
-        // Use Firebase for login - BARCHA TELEFONLARDA ISHLAYDI
+        // Use localStorage - ODDIY VA ISHONCHLI
         try {
-          const profile = await firebaseDb.login(email, password)
+          const profile = await globalDb.login(email, password)
           if (profile) {
             const authUser = { id: profile.id, email: profile.email, role: profile.role, profile }
             setUser(authUser)
