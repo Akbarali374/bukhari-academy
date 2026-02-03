@@ -14,7 +14,7 @@ interface FirebaseDatabase {
 }
 
 class FirebaseDatabaseService {
-  private baseUrl = 'https://bukhari-academy-default-rtdb.firebaseio.com'
+  private baseUrl = 'https://bukhari-academy-db-default-rtdb.europe-west1.firebasedatabase.app'
   private cache: FirebaseDatabase | null = null
   private cacheTime = 0
   private readonly CACHE_DURATION = 3000 // 3 soniya - juda tez
