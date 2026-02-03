@@ -2,20 +2,20 @@
 
 import type { Profile, Group, Grade, News, Homework, Comment } from '@/types'
 import { supabase } from './supabase'
-import { firebaseDb } from './firebaseDb'
+import { globalDb } from './globalDb'
 
 const SUPABASE_ENABLED = !!(typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_SUPABASE_URL)
 
-// Use Firebase instead of localStorage - BARCHA TELEFONLARDA ISHLAYDI
+// Use localStorage - ODDIY VA ISHONCHLI
 export async function getProfiles(): Promise<Profile[]> {
-  if (!SUPABASE_ENABLED || !supabase) return firebaseDb.getProfiles()
+  if (!SUPABASE_ENABLED || !supabase) return globalDb.getProfiles()
   const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false })
   return (data ?? []) as Profile[]
 }
 
 export async function getTeachers(): Promise<Profile[]> {
   if (!SUPABASE_ENABLED || !supabase) {
-    const profiles = await firebaseDb.getProfiles()
+    const profiles = await globalDb.getProfiles()
     return profiles.filter(p => p.role === 'teacher')
   }
   const { data } = await supabase.from('profiles').select('*').eq('role', 'teacher').order('created_at', { ascending: false })
@@ -50,7 +50,7 @@ export async function getStudentsByGroup(groupId: string): Promise<Profile[]> {
 
 export async function getStudents(): Promise<Profile[]> {
   if (!SUPABASE_ENABLED || !supabase) {
-    const profiles = await firebaseDb.getProfiles()
+    const profiles = await globalDb.getProfiles()
     return profiles.filter(p => p.role === 'student')
   }
   const { data } = await supabase.from('profiles').select('*').eq('role', 'student').order('created_at', { ascending: false })
@@ -60,11 +60,11 @@ export async function getStudents(): Promise<Profile[]> {
 export async function createTeacher(email: string, first_name: string, last_name: string, password: string): Promise<Profile | { error: string }> {
   if (!SUPABASE_ENABLED || !supabase) {
     try {
-      const profiles = await firebaseDb.getProfiles()
+      const profiles = await globalDb.getProfiles()
       const existing = profiles.find(p => p.email === email)
       if (existing) return { error: 'Bu email allaqachon mavjud' }
       
-      const profile = await firebaseDb.createProfile({
+      const profile = await globalDb.createProfile({
         email,
         first_name,
         last_name,
@@ -91,7 +91,7 @@ export async function createTeacher(email: string, first_name: string, last_name
 }
 
 export async function createGroup(name: string, teacher_id: string): Promise<Group> {
-  if (!SUPABASE_ENABLED || !supabase) return firebaseDb.createGroup(name, teacher_id)
+  if (!SUPABASE_ENABLED || !supabase) return globalDb.createGroup(name, teacher_id)
   const { data, error } = await supabase.from('groups').insert({ name, teacher_id }).select().single()
   if (error) throw new Error(error.message)
   return data as Group
@@ -106,11 +106,11 @@ export async function createStudent(
 ): Promise<Profile | { error: string }> {
   if (!SUPABASE_ENABLED || !supabase) {
     try {
-      const profiles = await firebaseDb.getProfiles()
+      const profiles = await globalDb.getProfiles()
       const existing = profiles.find(p => p.email === email)
       if (existing) return { error: 'Bu email allaqachon mavjud' }
       
-      const profile = await firebaseDb.createProfile({
+      const profile = await globalDb.createProfile({
         email,
         first_name,
         last_name,
