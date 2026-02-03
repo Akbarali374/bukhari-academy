@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data) setUser((u) => (u ? { ...u, profile: data as Profile } : null))
     } else {
       try {
-        const profiles = await firebaseDb.getProfiles()
+        const profiles = await globalDb.getProfiles()
         const profile = profiles.find(p => p.id === user.id)
         if (profile) {
           setUser(u => u ? { ...u, profile } : null)
