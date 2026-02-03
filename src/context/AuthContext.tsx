@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import type { Profile, Role } from '@/types'
 import { supabase } from '@/lib/supabase'
-import { globalDb } from '@/lib/globalDb'
+import { cloudDb } from '@/lib/cloudDb'
 import {
   demoGetSession,
   demoLogin as demoLoginFn,
@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data) setUser((u) => (u ? { ...u, profile: data as Profile } : null))
     } else {
       try {
-        const profiles = await globalDb.getProfiles()
+        const profiles = await cloudDb.getProfiles()
         const profile = profiles.find(p => p.id === user.id)
         if (profile) {
           setUser(u => u ? { ...u, profile } : null)
@@ -130,9 +130,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         return { ok: false, error: 'Profil topilmadi' }
       } else {
-        // Use localStorage - ODDIY VA ISHONCHLI
+        // Use Cloud Database - 300+ TELEFON UCHUN
         try {
-          const profile = await globalDb.login(email, password)
+          const profile = await cloudDb.login(email, password)
           if (profile) {
             const authUser = { id: profile.id, email: profile.email, role: profile.role, profile }
             setUser(authUser)
