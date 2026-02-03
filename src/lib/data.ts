@@ -22,7 +22,7 @@ export async function getTeachers(): Promise<Profile[]> {
 }
 
 export async function getGroups(): Promise<Group[]> {
-  if (!SUPABASE_ENABLED || !supabase) return firebaseDb.getGroups()
+  if (!SUPABASE_ENABLED || !supabase) return globalDb.getGroups()
   const { data } = await supabase.from('groups').select('*').order('created_at', { ascending: false })
   return (data ?? []) as Group[]
 }
@@ -40,7 +40,7 @@ export async function getGroupsWithTeacher(): Promise<(Group & { teacher?: Profi
 
 export async function getStudentsByGroup(groupId: string): Promise<Profile[]> {
   if (!SUPABASE_ENABLED || !supabase) {
-    const profiles = await firebaseDb.getProfiles()
+    const profiles = await globalDb.getProfiles()
     return profiles.filter(p => p.role === 'student' && p.group_id === groupId)
   }
   const { data } = await supabase.from('profiles').select('*').eq('role', 'student').eq('group_id', groupId)

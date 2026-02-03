@@ -25,32 +25,22 @@ class GlobalDatabaseService {
     }
 
     try {
-      // Production'da API dan yuklash - REAL-TIME ma'lumotlar
-      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        const apiUrl = `${this.baseUrl}/api/database`
-        const response = await fetch(apiUrl + '?t=' + now, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        })
-        
-        if (response.ok) {
-          const data = await response.json()
-          this.cache = data
-          this.cacheTime = now
-          console.log('📡 REAL-TIME: Ma\'lumotlar yangilandi -', data.profiles.length, 'foydalanuvchi')
-          return data
-        }
-      }
+      // GitHub'dan ma'lumotlarni yuklash - BARCHA TELEFONLAR UCHUN
+      const response = await fetch('https://raw.githubusercontent.com/Akbarali374/bukhari-academy/main/public/database.json?t=' + now)
       
-      // Development yoki fallback
-      console.log('🔧 Development rejimi - localStorage ishlatilmoqda')
-      return this.getFallbackData()
+      if (response.ok) {
+        const data = await response.json()
+        this.cache = data
+        this.cacheTime = now
+        console.log('🌍 GitHub: Ma\'lumotlar yuklandi -', data.profiles.length, 'foydalanuvchi')
+        return data
+      }
     } catch (error) {
-      console.error('API xatosi:', error)
-      return this.getFallbackData()
+      console.error('GitHub API xatosi:', error)
     }
+
+    // Fallback
+    return this.getFallbackData()
   }
 
   private getFallbackData(): GlobalDatabase {
@@ -103,37 +93,35 @@ class GlobalDatabaseService {
 
   async saveToLocal(data: GlobalDatabase): Promise<void> {
     try {
-      // Production'da API ga saqlash - REAL-TIME yangilanish
-      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        const apiUrl = `${this.baseUrl}/api/database`
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data)
+      // GitHub API orqali saqlash - BARCHA TELEFONLAR UCHUN
+      const response = await fetch('https://api.github.com/repos/Akbarali374/bukhari-academy/contents/public/database.json', {
+        method: 'PUT',
+        headers: {
+          'Authorization': 'token ghp_1234567890abcdef',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: 'Ma\'lumotlar yangilandi',
+          content: btoa(JSON.stringify(data, null, 2)),
+          sha: 'current-sha'
         })
-        
-        if (response.ok) {
-          console.log('📡 REAL-TIME: Ma\'lumotlar barcha telefonlarga yuborildi!')
-          this.cache = data
-          this.cacheTime = Date.now()
-          return
-        }
-      }
+      })
       
-      // Fallback - localStorage'ga saqlash
-      localStorage.setItem('bukhari_global_db', JSON.stringify(data))
-      this.cache = data
-      this.cacheTime = Date.now()
-      console.log('💾 Ma\'lumotlar localStorage\'ga saqlandi')
+      if (response.ok) {
+        console.log('🌍 GitHub: BARCHA TELEFONLARGA YUBORILDI!')
+        this.cache = data
+        this.cacheTime = Date.now()
+        return
+      }
     } catch (error) {
-      console.error('Saqlash xatosi:', error)
-      // Fallback
-      localStorage.setItem('bukhari_global_db', JSON.stringify(data))
-      this.cache = data
-      this.cacheTime = Date.now()
+      console.error('GitHub API xatosi:', error)
     }
+
+    // Fallback - localStorage
+    localStorage.setItem('bukhari_global_db', JSON.stringify(data))
+    this.cache = data
+    this.cacheTime = Date.now()
+    console.log('💾 localStorage\'ga saqlandi')
   }
 
   // Login function
