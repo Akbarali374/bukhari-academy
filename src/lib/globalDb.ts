@@ -15,7 +15,7 @@ class GlobalDatabaseService {
   private dbUrl = `${this.baseUrl}/database.json`
   private cache: GlobalDatabase | null = null
   private cacheTime = 0
-  private readonly CACHE_DURATION = 30000 // 30 seconds
+  private readonly CACHE_DURATION = 5000 // 5 soniya - tez yangilanish
   private readonly MAX_USERS_JSON = 500 // JSON fayl uchun maksimal foydalanuvchilar
 
   async loadDatabase(): Promise<GlobalDatabase> {
@@ -25,29 +25,30 @@ class GlobalDatabaseService {
     }
 
     try {
-      // Development rejimida to'g'ridan-to'g'ri fallback ishlatamiz
-      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        console.log('🔧 Development rejimi - localStorage ishlatilmoqda')
-        return this.getFallbackData()
+      // Production'da API dan yuklash - REAL-TIME ma'lumotlar
+      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        const apiUrl = `${this.baseUrl}/api/database`
+        const response = await fetch(apiUrl + '?t=' + now, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          this.cache = data
+          this.cacheTime = now
+          console.log('📡 REAL-TIME: Ma\'lumotlar yangilandi -', data.profiles.length, 'foydalanuvchi')
+          return data
+        }
       }
-
-      const response = await fetch(this.dbUrl + '?t=' + now)
-      if (!response.ok) {
-        throw new Error('Database yuklanmadi')
-      }
-      const data = await response.json()
-      this.cache = data
-      this.cacheTime = now
       
-      // Agar foydalanuvchilar soni ko'p bo'lsa, ogohlantirish
-      if (data.profiles.length > this.MAX_USERS_JSON) {
-        console.warn(`⚠️ ${data.profiles.length} foydalanuvchi mavjud. Professional database (Supabase) tavsiya etiladi.`)
-      }
-      
-      return data
+      // Development yoki fallback
+      console.log('🔧 Development rejimi - localStorage ishlatilmoqda')
+      return this.getFallbackData()
     } catch (error) {
-      console.error('Database xatosi:', error)
-      // Fallback to localStorage
+      console.error('API xatosi:', error)
       return this.getFallbackData()
     }
   }
@@ -101,15 +102,37 @@ class GlobalDatabaseService {
   }
 
   async saveToLocal(data: GlobalDatabase): Promise<void> {
-    // Har doim localStorage'ga saqlash
-    localStorage.setItem('bukhari_global_db', JSON.stringify(data))
-    this.cache = data
-    this.cacheTime = Date.now()
-    
-    // Production'da JSON faylni yangilash uchun API chaqiruvi (kelajakda)
-    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-      console.log('📡 Production rejimi - ma\'lumotlar localStorage\'ga saqlandi')
-      // Bu yerda kelajakda server API chaqiruvi bo'lishi mumkin
+    try {
+      // Production'da API ga saqlash - REAL-TIME yangilanish
+      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        const apiUrl = `${this.baseUrl}/api/database`
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        })
+        
+        if (response.ok) {
+          console.log('📡 REAL-TIME: Ma\'lumotlar barcha telefonlarga yuborildi!')
+          this.cache = data
+          this.cacheTime = Date.now()
+          return
+        }
+      }
+      
+      // Fallback - localStorage'ga saqlash
+      localStorage.setItem('bukhari_global_db', JSON.stringify(data))
+      this.cache = data
+      this.cacheTime = Date.now()
+      console.log('💾 Ma\'lumotlar localStorage\'ga saqlandi')
+    } catch (error) {
+      console.error('Saqlash xatosi:', error)
+      // Fallback
+      localStorage.setItem('bukhari_global_db', JSON.stringify(data))
+      this.cache = data
+      this.cacheTime = Date.now()
     }
   }
 
