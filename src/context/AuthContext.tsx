@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import type { Profile, Role } from '@/types'
 import { supabase } from '@/lib/supabase'
-import { cloudDb } from '@/lib/cloudDb'
+import { globalDb } from '@/lib/globalDb'
 import {
   demoGetSession,
   demoLogin as demoLoginFn,
@@ -34,14 +34,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data) setUser((u) => (u ? { ...u, profile: data as Profile } : null))
     } else {
       try {
-        const profiles = await cloudDb.getProfiles()
+        const profiles = await globalDb.getProfiles()
         const profile = profiles.find(p => p.id === user.id)
         if (profile) {
           setUser(u => u ? { ...u, profile } : null)
         }
       } catch (error) {
         console.error('Profile refresh error:', error)
-        // Fallback to demo session
         const session = demoGetSession()
         if (session) setUser({ id: session.id, email: session.email, role: session.role, profile: session.profile })
       }
@@ -130,13 +129,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         return { ok: false, error: 'Profil topilmadi' }
       } else {
-        // Use Cloud Database - 300+ TELEFON UCHUN
         try {
-          const profile = await cloudDb.login(email, password)
+          const profile = await globalDb.login(email, password)
           if (profile) {
             const authUser = { id: profile.id, email: profile.email, role: profile.role, profile }
             setUser(authUser)
-            // Save session to localStorage for persistence
             localStorage.setItem('bukhari_session', JSON.stringify(authUser))
             return { ok: true, role: profile.role }
           }

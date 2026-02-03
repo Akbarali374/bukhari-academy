@@ -2,13 +2,12 @@
 
 import type { Profile, Group, Grade, News, Homework, Comment } from '@/types'
 import { supabase } from './supabase'
-import { cloudDb } from './cloudDb'
+import { globalDb } from './globalDb'
 
 const SUPABASE_ENABLED = !!(typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_SUPABASE_URL)
 
-// Use Cloud Database - 300+ TELEFON UCHUN
 export async function getProfiles(): Promise<Profile[]> {
-  if (!SUPABASE_ENABLED || !supabase) return cloudDb.getProfiles()
+  if (!SUPABASE_ENABLED || !supabase) return globalDb.getProfiles()
   const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false })
   return (data ?? []) as Profile[]
 }
