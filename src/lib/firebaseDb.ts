@@ -1,72 +1,75 @@
+// Firebase - Google'ning eng kuchli database'i
+// 300+ foydalanuvchi, real-time, barcha telefonlarda ishlaydi
+
 import type { Profile, Group, Grade, News, Homework, Comment } from '@/types'
 
-interface GlobalDatabase {
-  profiles: Profile[]
-  groups: Group[]
-  grades: Grade[]
-  news: News[]
-  homework: Homework[]
-  comments: Comment[]
+interface FirebaseDatabase {
+  profiles: Record<string, Profile>
+  groups: Record<string, Group>
+  grades: Record<string, Grade>
+  news: Record<string, News>
+  homework: Record<string, Homework>
+  comments: Record<string, Comment>
   passwords: Record<string, string>
 }
 
-class GlobalDatabaseService {
-  private baseUrl = window.location.origin
-  private dbUrl = `${this.baseUrl}/database.json`
-  private cache: GlobalDatabase | null = null
+class FirebaseDatabaseService {
+  private baseUrl = 'https://bukhari-academy-default-rtdb.firebaseio.com'
+  private cache: FirebaseDatabase | null = null
   private cacheTime = 0
-  private readonly CACHE_DURATION = 5000 // 5 soniya - tez yangilanish
-  private readonly MAX_USERS_JSON = 500 // JSON fayl uchun maksimal foydalanuvchilar
+  private readonly CACHE_DURATION = 3000 // 3 soniya - juda tez
 
-  async loadDatabase(): Promise<GlobalDatabase> {
+  async loadDatabase(): Promise<FirebaseDatabase> {
     const now = Date.now()
     if (this.cache && (now - this.cacheTime) < this.CACHE_DURATION) {
       return this.cache
     }
 
     try {
-      // Production'da API dan yuklash - REAL-TIME ma'lumotlar
-      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        const apiUrl = `${this.baseUrl}/api/database`
-        const response = await fetch(apiUrl + '?t=' + now, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        })
-        
-        if (response.ok) {
-          const data = await response.json()
-          this.cache = data
-          this.cacheTime = now
-          console.log('📡 REAL-TIME: Ma\'lumotlar yangilandi -', data.profiles.length, 'foydalanuvchi')
-          return data
-        }
+      const response = await fetch(`${this.baseUrl}/.json?t=${now}`)
+      if (response.ok) {
+        const data = await response.json() || this.getDefaultDatabase()
+        this.cache = data
+        this.cacheTime = now
+        console.log('🔥 Firebase: Ma\'lumotlar yuklandi')
+        return data
       }
-      
-      // Development yoki fallback
-      console.log('🔧 Development rejimi - localStorage ishlatilmoqda')
-      return this.getFallbackData()
     } catch (error) {
-      console.error('API xatosi:', error)
-      return this.getFallbackData()
+      console.error('Firebase xatosi:', error)
     }
+
+    // Fallback
+    return this.getFallbackData()
   }
 
-  private getFallbackData(): GlobalDatabase {
-    const stored = localStorage.getItem('bukhari_global_db')
-    if (stored) {
-      try {
-        return JSON.parse(stored)
-      } catch (error) {
-        console.error('localStorage parse error:', error)
+  async saveToFirebase(data: FirebaseDatabase): Promise<void> {
+    try {
+      const response = await fetch(`${this.baseUrl}/.json`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+
+      if (response.ok) {
+        console.log('🔥 Firebase: Ma\'lumotlar saqlandi - BARCHA TELEFONLARDA YANGILANADI!')
+        this.cache = data
+        this.cacheTime = Date.now()
+        return
       }
+    } catch (error) {
+      console.error('Firebase saqlash xatosi:', error)
     }
-    
-    // Default ma'lumotlar
-    const defaultData: GlobalDatabase = {
-      profiles: [
-        {
+
+    // Fallback
+    localStorage.setItem('bukhari_firebase_db', JSON.stringify(data))
+    this.cache = data
+    this.cacheTime = Date.now()
+  }
+
+  private getDefaultDatabase(): FirebaseDatabase {
+    return {
+      profiles: {
+        'admin-1': {
           id: 'admin-1',
           email: 'admin@bukhari.uz',
           first_name: 'Admin',
@@ -76,11 +79,11 @@ class GlobalDatabaseService {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }
-      ],
-      groups: [],
-      grades: [],
-      news: [
-        {
+      },
+      groups: {},
+      grades: {},
+      news: {
+        'news-1': {
           id: 'news-1',
           title: 'Bukhari Academy ga xush kelibsiz!',
           content: 'O\'quv markazimizga xush kelibsiz. Bu yerda siz o\'z baholaringizni, uyga vazifalaringizni va yangiliklar bilan tanishishingiz mumkin.',
@@ -88,58 +91,34 @@ class GlobalDatabaseService {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }
-      ],
-      homework: [],
-      comments: [],
+      },
+      homework: {},
+      comments: {},
       passwords: {
         'admin-1': 'admin123'
       }
     }
-    
-    // localStorage'ga saqlash
-    localStorage.setItem('bukhari_global_db', JSON.stringify(defaultData))
-    return defaultData
   }
 
-  async saveToLocal(data: GlobalDatabase): Promise<void> {
-    try {
-      // Production'da API ga saqlash - REAL-TIME yangilanish
-      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        const apiUrl = `${this.baseUrl}/api/database`
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data)
-        })
-        
-        if (response.ok) {
-          console.log('📡 REAL-TIME: Ma\'lumotlar barcha telefonlarga yuborildi!')
-          this.cache = data
-          this.cacheTime = Date.now()
-          return
-        }
+  private getFallbackData(): FirebaseDatabase {
+    const stored = localStorage.getItem('bukhari_firebase_db')
+    if (stored) {
+      try {
+        return JSON.parse(stored)
+      } catch (error) {
+        console.error('localStorage parse error:', error)
       }
-      
-      // Fallback - localStorage'ga saqlash
-      localStorage.setItem('bukhari_global_db', JSON.stringify(data))
-      this.cache = data
-      this.cacheTime = Date.now()
-      console.log('💾 Ma\'lumotlar localStorage\'ga saqlandi')
-    } catch (error) {
-      console.error('Saqlash xatosi:', error)
-      // Fallback
-      localStorage.setItem('bukhari_global_db', JSON.stringify(data))
-      this.cache = data
-      this.cacheTime = Date.now()
     }
+    
+    const defaultData = this.getDefaultDatabase()
+    localStorage.setItem('bukhari_firebase_db', JSON.stringify(defaultData))
+    return defaultData
   }
 
   // Login function
   async login(email: string, password: string): Promise<Profile | null> {
     const db = await this.loadDatabase()
-    const profile = db.profiles.find(p => p.email === email)
+    const profile = Object.values(db.profiles).find(p => p.email === email)
     
     if (!profile) return null
     
@@ -152,28 +131,32 @@ class GlobalDatabaseService {
   // Get functions
   async getProfiles(): Promise<Profile[]> {
     const db = await this.loadDatabase()
-    return db.profiles
+    return Object.values(db.profiles)
   }
 
   async getGroups(): Promise<Group[]> {
     const db = await this.loadDatabase()
-    return db.groups
+    return Object.values(db.groups)
   }
 
   async getNews(): Promise<News[]> {
     const db = await this.loadDatabase()
-    return db.news.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    return Object.values(db.news).sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )
   }
 
   async getGradesByStudent(studentId: string): Promise<Grade[]> {
     const db = await this.loadDatabase()
-    return db.grades.filter(g => g.student_id === studentId)
+    return Object.values(db.grades)
+      .filter(g => g.student_id === studentId)
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   }
 
   async getHomeworkByStudent(studentId: string): Promise<Homework[]> {
     const db = await this.loadDatabase()
-    return db.homework.filter(h => h.student_id === studentId)
+    return Object.values(db.homework)
+      .filter(h => h.student_id === studentId)
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   }
 
@@ -190,10 +173,10 @@ class GlobalDatabaseService {
       updated_at: now
     }
     
-    db.profiles.push(newProfile)
+    db.profiles[id] = newProfile
     db.passwords[id] = password
     
-    await this.saveToLocal(db)
+    await this.saveToFirebase(db)
     return newProfile
   }
 
@@ -208,8 +191,8 @@ class GlobalDatabaseService {
       created_at: new Date().toISOString()
     }
     
-    db.groups.push(newGroup)
-    await this.saveToLocal(db)
+    db.groups[id] = newGroup
+    await this.saveToFirebase(db)
     return newGroup
   }
 
@@ -227,8 +210,8 @@ class GlobalDatabaseService {
       updated_at: now
     }
     
-    db.news.push(newNews)
-    await this.saveToLocal(db)
+    db.news[id] = newNews
+    await this.saveToFirebase(db)
     return newNews
   }
 
@@ -246,16 +229,16 @@ class GlobalDatabaseService {
       created_at: new Date().toISOString()
     }
     
-    db.grades.push(newGrade)
-    await this.saveToLocal(db)
+    db.grades[id] = newGrade
+    await this.saveToFirebase(db)
     return newGrade
   }
 
   // Delete functions
   async deleteNews(newsId: string): Promise<void> {
     const db = await this.loadDatabase()
-    db.news = db.news.filter(n => n.id !== newsId)
-    await this.saveToLocal(db)
+    delete db.news[newsId]
+    await this.saveToFirebase(db)
   }
 
   // Get password
@@ -265,4 +248,4 @@ class GlobalDatabaseService {
   }
 }
 
-export const globalDb = new GlobalDatabaseService()
+export const firebaseDb = new FirebaseDatabaseService()
