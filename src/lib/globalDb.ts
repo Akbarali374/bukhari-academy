@@ -13,9 +13,9 @@ interface GlobalDatabase {
 class GlobalDatabaseService {
   private cache: GlobalDatabase | null = null
   private cacheTime = 0
-  private readonly CACHE_DURATION = 500 // 0.5 soniya - juda tez yangilanish
-  private readonly API_URL = 'https://api.jsonbin.io/v3/b/67a3f1e5ad19ca34f8e8d2b4'
-  private readonly API_KEY = '$2a$10$vN8K9yF3mP4qR8sT2uL5eX7wZ6bC4dA0fG3hJ5kM8nP1qS9tV7uY'
+  private readonly CACHE_DURATION = 1000 // 1 soniya
+  private readonly STORAGE_KEY = 'bukhari_global_db'
+  private readonly SYNC_KEY = 'bukhari_last_sync'
 
   async loadDatabase(): Promise<GlobalDatabase> {
     const now = Date.now()
@@ -23,42 +23,27 @@ class GlobalDatabaseService {
       return this.cache
     }
 
+    // localStorage'dan yuklash
+    const data = this.getStoredData()
+    this.cache = data
+    this.cacheTime = now
+    
+    console.log('💾 Ma\'lumotlar yuklandi -', data.profiles.length, 'foydalanuvchi')
+    return data
+  }
+
+  private getStoredData(): GlobalDatabase {
     try {
-      // JSONBin.io - ENG KUCHLI CLOUD DATABASE
-      const response = await fetch(`${this.API_URL}/latest`, {
-        headers: {
-          'X-Master-Key': this.API_KEY,
-          'X-Bin-Meta': 'false'
-        }
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        if (data && data.profiles) {
-          this.cache = data
-          this.cacheTime = now
-          console.log('🌐 JSONBin: Ma\'lumotlar yuklandi -', data.profiles.length, 'foydalanuvchi')
+      const stored = localStorage.getItem(this.STORAGE_KEY)
+      if (stored) {
+        const data = JSON.parse(stored)
+        // Ma'lumotlar to'g'ri formatda ekanligini tekshirish
+        if (data && data.profiles && Array.isArray(data.profiles)) {
           return data
         }
       }
     } catch (error) {
-      console.error('JSONBin xatosi:', error)
-    }
-
-    // Fallback - localStorage
-    return this.getFallbackData()
-  }
-
-  private getFallbackData(): GlobalDatabase {
-    const stored = localStorage.getItem('bukhari_global_db')
-    if (stored) {
-      try {
-        const data = JSON.parse(stored)
-        console.log('💾 localStorage dan yuklandi')
-        return data
-      } catch (error) {
-        console.error('localStorage parse error:', error)
-      }
+      console.error('localStorage parse error:', error)
     }
     
     // Default ma'lumotlar
@@ -94,41 +79,42 @@ class GlobalDatabaseService {
       }
     }
     
-    localStorage.setItem('bukhari_global_db', JSON.stringify(defaultData))
+    this.saveStoredData(defaultData)
     console.log('🔄 Default ma\'lumotlar yaratildi')
     return defaultData
   }
 
-  async saveToLocal(data: GlobalDatabase): Promise<void> {
+  private saveStoredData(data: GlobalDatabase): void {
     try {
-      // JSONBin.io'ga saqlash - BARCHA TELEFONLARGA YETADI
-      const response = await fetch(this.API_URL, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Master-Key': this.API_KEY
-        },
-        body: JSON.stringify(data)
-      })
-
-      if (response.ok) {
-        console.log('🌐 JSONBin: BARCHA TELEFONLARGA YUBORILDI!')
-        this.cache = data
-        this.cacheTime = Date.now()
-        
-        // localStorage'ga ham saqlash
-        localStorage.setItem('bukhari_global_db', JSON.stringify(data))
-        return
-      }
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data))
+      localStorage.setItem(this.SYNC_KEY, Date.now().toString())
+      console.log('💾 Ma\'lumotlar saqlandi -', data.profiles.length, 'foydalanuvchi')
     } catch (error) {
-      console.error('JSONBin saqlash xatosi:', error)
+      console.error('localStorage save error:', error)
     }
+  }
 
-    // Fallback - localStorage
-    localStorage.setItem('bukhari_global_db', JSON.stringify(data))
+  async saveToLocal(data: GlobalDatabase): Promise<void> {
     this.cache = data
     this.cacheTime = Date.now()
-    console.log('💾 localStorage\'ga saqlandi -', data.profiles.length, 'foydalanuvchi')
+    this.saveStoredData(data)
+    
+    // Boshqa tab'larga signal yuborish
+    this.broadcastUpdate()
+  }
+
+  private broadcastUpdate(): void {
+    try {
+      // StorageEvent orqali boshqa tab'larga signal yuborish
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: this.SYNC_KEY,
+        newValue: Date.now().toString(),
+        storageArea: localStorage
+      }))
+      console.log('📡 Yangilanish signal yuborildi')
+    } catch (error) {
+      console.error('Broadcast xatosi:', error)
+    }
   }
 
   // Login function
@@ -268,12 +254,52 @@ class GlobalDatabaseService {
     return db.passwords[profileId] || 'student123'
   }
 
-  // Force refresh - barcha telefonlarda ma'lumotlarni yangilash
+  // Force refresh
   async forceRefresh(): Promise<void> {
     this.cache = null
     this.cacheTime = 0
-    console.log('🔄 Cache tozalandi, yangi ma\'lumotlar yuklanadi')
+    console.log('🔄 Cache tozalandi')
+  }
+
+  // Setup storage listener
+  setupStorageListener(): void {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', (e) => {
+        if (e.key === this.SYNC_KEY) {
+          console.log('📨 Storage yangilanish qabul qilindi')
+          this.cache = null
+          this.cacheTime = 0
+        }
+      })
+      console.log('📡 Storage listener o\'rnatildi')
+    }
+  }
+
+  // Export data for sharing
+  exportData(): string {
+    const data = this.getStoredData()
+    return JSON.stringify(data, null, 2)
+  }
+
+  // Import data from sharing
+  async importData(jsonData: string): Promise<boolean> {
+    try {
+      const data = JSON.parse(jsonData)
+      if (data && data.profiles && Array.isArray(data.profiles)) {
+        await this.saveToLocal(data)
+        console.log('📥 Ma\'lumotlar import qilindi')
+        return true
+      }
+    } catch (error) {
+      console.error('Import xatosi:', error)
+    }
+    return false
   }
 }
 
 export const globalDb = new GlobalDatabaseService()
+
+// Storage listener'ni o'rnatish
+if (typeof window !== 'undefined') {
+  globalDb.setupStorageListener()
+}
