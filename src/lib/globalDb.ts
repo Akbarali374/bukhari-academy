@@ -11,12 +11,9 @@ interface GlobalDatabase {
 }
 
 class GlobalDatabaseService {
-  private baseUrl = window.location.origin
-  private dbUrl = `${this.baseUrl}/database.json`
   private cache: GlobalDatabase | null = null
   private cacheTime = 0
-  private readonly CACHE_DURATION = 5000 // 5 soniya - tez yangilanish
-  private readonly MAX_USERS_JSON = 500 // JSON fayl uchun maksimal foydalanuvchilar
+  private readonly CACHE_DURATION = 30000 // 30 soniya
 
   async loadDatabase(): Promise<GlobalDatabase> {
     const now = Date.now()
@@ -25,18 +22,17 @@ class GlobalDatabaseService {
     }
 
     try {
-      // GitHub'dan ma'lumotlarni yuklash - BARCHA TELEFONLAR UCHUN
-      const response = await fetch('https://raw.githubusercontent.com/Akbarali374/bukhari-academy/main/public/database.json?t=' + now)
-      
+      // Public fayldan yuklash - Vercel uchun
+      const response = await fetch('/database.json?t=' + now)
       if (response.ok) {
         const data = await response.json()
         this.cache = data
         this.cacheTime = now
-        console.log('🌍 GitHub: Ma\'lumotlar yuklandi -', data.profiles.length, 'foydalanuvchi')
+        console.log('📄 Database yuklandi:', data.profiles.length, 'foydalanuvchi')
         return data
       }
     } catch (error) {
-      console.error('GitHub API xatosi:', error)
+      console.error('Database xatosi:', error)
     }
 
     // Fallback
@@ -92,36 +88,11 @@ class GlobalDatabaseService {
   }
 
   async saveToLocal(data: GlobalDatabase): Promise<void> {
-    try {
-      // GitHub API orqali saqlash - BARCHA TELEFONLAR UCHUN
-      const response = await fetch('https://api.github.com/repos/Akbarali374/bukhari-academy/contents/public/database.json', {
-        method: 'PUT',
-        headers: {
-          'Authorization': 'token ghp_1234567890abcdef',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: 'Ma\'lumotlar yangilandi',
-          content: btoa(JSON.stringify(data, null, 2)),
-          sha: 'current-sha'
-        })
-      })
-      
-      if (response.ok) {
-        console.log('🌍 GitHub: BARCHA TELEFONLARGA YUBORILDI!')
-        this.cache = data
-        this.cacheTime = Date.now()
-        return
-      }
-    } catch (error) {
-      console.error('GitHub API xatosi:', error)
-    }
-
-    // Fallback - localStorage
+    // localStorage'ga saqlash
     localStorage.setItem('bukhari_global_db', JSON.stringify(data))
     this.cache = data
     this.cacheTime = Date.now()
-    console.log('💾 localStorage\'ga saqlandi')
+    console.log('💾 Ma\'lumotlar saqlandi')
   }
 
   // Login function
