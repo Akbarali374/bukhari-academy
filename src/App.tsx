@@ -19,6 +19,7 @@ import TeacherAddGrade from '@/pages/teacher/AddGrade'
 import StudentProfile from '@/pages/student/Profile'
 import StudentGrades from '@/pages/student/Grades'
 import AdminNews from '@/pages/admin/News'
+import AdminDataSync from '@/pages/admin/DataSync'
 import TeacherComments from '@/pages/teacher/Comments'
 import TeacherHomework from '@/pages/teacher/Homework'
 import StudentNews from '@/pages/student/News'
@@ -62,6 +63,7 @@ export default function App() {
         <Route path="logins" element={<AdminLogins />} />
         <Route path="create-login" element={<AdminCreateLogin />} />
         <Route path="news" element={<AdminNews />} />
+        <Route path="data-sync" element={<AdminDataSync />} />
         <Route path="monthly-reports" element={<AdminMonthlyReports />} />
       </Route>
       <Route
