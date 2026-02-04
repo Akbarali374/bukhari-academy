@@ -12,15 +12,15 @@ export default function AdminLogins() {
 
   useEffect(() => {
     getProfiles()
-      .then((p) => {
+      .then(async (p) => {
         const nonAdminProfiles = p.filter((x) => x.role !== 'admin')
         setProfiles(nonAdminProfiles)
         
         // Load passwords for all profiles
         const passwordMap: Record<string, string> = {}
-        nonAdminProfiles.forEach(profile => {
-          passwordMap[profile.id] = getPassword(profile.id)
-        })
+        for (const profile of nonAdminProfiles) {
+          passwordMap[profile.id] = await getPassword(profile.id)
+        }
         setPasswords(passwordMap)
       })
       .finally(() => setLoading(false))

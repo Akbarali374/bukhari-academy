@@ -13,7 +13,7 @@ interface GlobalDatabase {
 class GlobalDatabaseService {
   private cache: GlobalDatabase | null = null
   private cacheTime = 0
-  private readonly CACHE_DURATION = 30000 // 30 soniya
+  private readonly CACHE_DURATION = 5000 // 5 soniya - tez yangilanish
 
   async loadDatabase(): Promise<GlobalDatabase> {
     const now = Date.now()
@@ -22,17 +22,19 @@ class GlobalDatabaseService {
     }
 
     try {
-      // Public fayldan yuklash - Vercel uchun
-      const response = await fetch('/database.json?t=' + now)
+      // Firebase Real-time Database - ENG KUCHLI
+      const response = await fetch('https://bukhari-academy-db-default-rtdb.firebaseio.com/.json?t=' + now)
       if (response.ok) {
         const data = await response.json()
-        this.cache = data
-        this.cacheTime = now
-        console.log('📄 Database yuklandi:', data.profiles.length, 'foydalanuvchi')
-        return data
+        if (data && data.profiles) {
+          this.cache = data
+          this.cacheTime = now
+          console.log('🔥 Firebase: Ma\'lumotlar yuklandi -', data.profiles.length, 'foydalanuvchi')
+          return data
+        }
       }
     } catch (error) {
-      console.error('Database xatosi:', error)
+      console.error('Firebase xatosi:', error)
     }
 
     // Fallback
@@ -88,11 +90,29 @@ class GlobalDatabaseService {
   }
 
   async saveToLocal(data: GlobalDatabase): Promise<void> {
-    // localStorage'ga saqlash
+    try {
+      // Firebase'ga saqlash - BARCHA TELEFONLARGA YETADI
+      const response = await fetch('https://bukhari-academy-db-default-rtdb.firebaseio.com/.json', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+
+      if (response.ok) {
+        console.log('🔥 Firebase: BARCHA TELEFONLARGA YUBORILDI!')
+        this.cache = data
+        this.cacheTime = Date.now()
+        return
+      }
+    } catch (error) {
+      console.error('Firebase saqlash xatosi:', error)
+    }
+
+    // Fallback
     localStorage.setItem('bukhari_global_db', JSON.stringify(data))
     this.cache = data
     this.cacheTime = Date.now()
-    console.log('💾 Ma\'lumotlar saqlandi')
+    console.log('💾 localStorage\'ga saqlandi')
   }
 
   // Login function
