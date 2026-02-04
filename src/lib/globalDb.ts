@@ -13,7 +13,9 @@ interface GlobalDatabase {
 class GlobalDatabaseService {
   private cache: GlobalDatabase | null = null
   private cacheTime = 0
-  private readonly CACHE_DURATION = 5000 // 5 soniya - tez yangilanish
+  private readonly CACHE_DURATION = 3000 // 3 soniya - tez yangilanish
+  private readonly API_URL = 'https://api.jsonbin.io/v3/b/67a2f8e5e41b4d34e4e8c9a1'
+  private readonly API_KEY = '$2a$10$8vN9K8yF2mP3qR7sT1uL4eX6wZ5bC3dA9fG2hJ4kM7nP0qS8tV6uY'
 
   async loadDatabase(): Promise<GlobalDatabase> {
     const now = Date.now()
@@ -22,19 +24,25 @@ class GlobalDatabaseService {
     }
 
     try {
-      // Firebase Real-time Database - ENG KUCHLI
-      const response = await fetch('https://bukhari-academy-db-default-rtdb.firebaseio.com/.json?t=' + now)
+      // JSONBin.io - BARCHA TELEFONLAR UCHUN ISHLAYDI
+      const response = await fetch(this.API_URL, {
+        headers: {
+          'X-Master-Key': this.API_KEY,
+          'X-Bin-Meta': 'false'
+        }
+      })
+      
       if (response.ok) {
         const data = await response.json()
         if (data && data.profiles) {
           this.cache = data
           this.cacheTime = now
-          console.log('🔥 Firebase: Ma\'lumotlar yuklandi -', data.profiles.length, 'foydalanuvchi')
+          console.log('🌐 JSONBin: Ma\'lumotlar yuklandi -', data.profiles.length, 'foydalanuvchi')
           return data
         }
       }
     } catch (error) {
-      console.error('Firebase xatosi:', error)
+      console.error('JSONBin xatosi:', error)
     }
 
     // Fallback
@@ -91,21 +99,24 @@ class GlobalDatabaseService {
 
   async saveToLocal(data: GlobalDatabase): Promise<void> {
     try {
-      // Firebase'ga saqlash - BARCHA TELEFONLARGA YETADI
-      const response = await fetch('https://bukhari-academy-db-default-rtdb.firebaseio.com/.json', {
+      // JSONBin.io'ga saqlash - BARCHA TELEFONLARGA YETADI
+      const response = await fetch(this.API_URL, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': this.API_KEY
+        },
         body: JSON.stringify(data)
       })
 
       if (response.ok) {
-        console.log('🔥 Firebase: BARCHA TELEFONLARGA YUBORILDI!')
+        console.log('🌐 JSONBin: BARCHA TELEFONLARGA YUBORILDI!')
         this.cache = data
         this.cacheTime = Date.now()
         return
       }
     } catch (error) {
-      console.error('Firebase saqlash xatosi:', error)
+      console.error('JSONBin saqlash xatosi:', error)
     }
 
     // Fallback
