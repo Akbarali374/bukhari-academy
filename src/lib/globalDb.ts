@@ -13,9 +13,8 @@ interface GlobalDatabase {
 class GlobalDatabaseService {
   private cache: GlobalDatabase | null = null
   private cacheTime = 0
-  private readonly CACHE_DURATION = 3000 // 3 soniya - tez yangilanish
-  private readonly API_URL = 'https://api.jsonbin.io/v3/b/67a2f8e5e41b4d34e4e8c9a1'
-  private readonly API_KEY = '$2a$10$8vN9K8yF2mP3qR7sT1uL4eX6wZ5bC3dA9fG2hJ4kM7nP0qS8tV6uY'
+  private readonly CACHE_DURATION = 2000 // 2 soniya - tez yangilanish
+  private readonly GITHUB_API = 'https://raw.githubusercontent.com/Akbarali374/bukhari-academy/main/public/database.json'
 
   async loadDatabase(): Promise<GlobalDatabase> {
     const now = Date.now()
@@ -24,12 +23,9 @@ class GlobalDatabaseService {
     }
 
     try {
-      // JSONBin.io - BARCHA TELEFONLAR UCHUN ISHLAYDI
-      const response = await fetch(this.API_URL, {
-        headers: {
-          'X-Master-Key': this.API_KEY,
-          'X-Bin-Meta': 'false'
-        }
+      // GitHub Raw API - BARCHA TELEFONLAR UCHUN ISHLAYDI
+      const response = await fetch(this.GITHUB_API + '?t=' + now, {
+        cache: 'no-cache'
       })
       
       if (response.ok) {
@@ -37,15 +33,15 @@ class GlobalDatabaseService {
         if (data && data.profiles) {
           this.cache = data
           this.cacheTime = now
-          console.log('🌐 JSONBin: Ma\'lumotlar yuklandi -', data.profiles.length, 'foydalanuvchi')
+          console.log('🐙 GitHub: Ma\'lumotlar yuklandi -', data.profiles.length, 'foydalanuvchi')
           return data
         }
       }
     } catch (error) {
-      console.error('JSONBin xatosi:', error)
+      console.error('GitHub API xatosi:', error)
     }
 
-    // Fallback
+    // Fallback - localStorage
     return this.getFallbackData()
   }
 
@@ -53,7 +49,9 @@ class GlobalDatabaseService {
     const stored = localStorage.getItem('bukhari_global_db')
     if (stored) {
       try {
-        return JSON.parse(stored)
+        const data = JSON.parse(stored)
+        console.log('💾 localStorage dan yuklandi')
+        return data
       } catch (error) {
         console.error('localStorage parse error:', error)
       }
@@ -94,36 +92,20 @@ class GlobalDatabaseService {
     
     // localStorage'ga saqlash
     localStorage.setItem('bukhari_global_db', JSON.stringify(defaultData))
+    console.log('🔄 Default ma\'lumotlar yaratildi')
     return defaultData
   }
 
   async saveToLocal(data: GlobalDatabase): Promise<void> {
-    try {
-      // JSONBin.io'ga saqlash - BARCHA TELEFONLARGA YETADI
-      const response = await fetch(this.API_URL, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Master-Key': this.API_KEY
-        },
-        body: JSON.stringify(data)
-      })
-
-      if (response.ok) {
-        console.log('🌐 JSONBin: BARCHA TELEFONLARGA YUBORILDI!')
-        this.cache = data
-        this.cacheTime = Date.now()
-        return
-      }
-    } catch (error) {
-      console.error('JSONBin saqlash xatosi:', error)
-    }
-
-    // Fallback
+    // Hozircha faqat localStorage'ga saqlash
+    // Keyinchalik GitHub API orqali saqlash qo'shiladi
     localStorage.setItem('bukhari_global_db', JSON.stringify(data))
     this.cache = data
     this.cacheTime = Date.now()
-    console.log('💾 localStorage\'ga saqlandi')
+    console.log('💾 localStorage\'ga saqlandi -', data.profiles.length, 'foydalanuvchi')
+    
+    // GitHub'ga ham yuborish uchun console'da ko'rsatish
+    console.log('📤 GitHub\'ga yuborish uchun:', JSON.stringify(data, null, 2))
   }
 
   // Login function
@@ -131,17 +113,25 @@ class GlobalDatabaseService {
     const db = await this.loadDatabase()
     const profile = db.profiles.find(p => p.email === email)
     
-    if (!profile) return null
+    if (!profile) {
+      console.log('❌ Profil topilmadi:', email)
+      return null
+    }
     
     const storedPassword = db.passwords[profile.id] || 'student123'
-    if (password !== storedPassword) return null
+    if (password !== storedPassword) {
+      console.log('❌ Parol noto\'g\'ri:', email, 'kutilgan:', storedPassword, 'kiritilgan:', password)
+      return null
+    }
     
+    console.log('✅ Login muvaffaqiyatli:', profile.email, profile.role)
     return profile
   }
 
   // Get functions
   async getProfiles(): Promise<Profile[]> {
     const db = await this.loadDatabase()
+    console.log('👥 Profillar soni:', db.profiles.length)
     return db.profiles
   }
 
@@ -183,6 +173,7 @@ class GlobalDatabaseService {
     db.profiles.push(newProfile)
     db.passwords[id] = password
     
+    console.log('➕ Yangi profil yaratildi:', newProfile.email, newProfile.role)
     await this.saveToLocal(db)
     return newProfile
   }
