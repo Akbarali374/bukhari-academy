@@ -17,12 +17,12 @@ import AdminMonthlyReports from '@/pages/admin/MonthlyReports'
 import TeacherGroups from '@/pages/teacher/Groups'
 import TeacherStudents from '@/pages/teacher/Students'
 import TeacherAddGrade from '@/pages/teacher/AddGrade'
+import TeacherAttendance from '@/pages/teacher/Attendance'
+import TeacherHomework from '@/pages/teacher/Homework'
 import StudentProfile from '@/pages/student/Profile'
 import StudentGrades from '@/pages/student/Grades'
 import AdminNews from '@/pages/admin/News'
 import AdminDataSync from '@/pages/admin/DataSync'
-import TeacherComments from '@/pages/teacher/Comments'
-import TeacherHomework from '@/pages/teacher/Homework'
 import StudentNews from '@/pages/student/News'
 import StudentHomework from '@/pages/student/Homework'
 
@@ -92,7 +92,7 @@ export default function App() {
         <Route path="groups" element={<TeacherGroups />} />
         <Route path="students/:groupId" element={<TeacherStudents />} />
         <Route path="add-grade/:studentId" element={<TeacherAddGrade />} />
-        <Route path="comments/:studentId" element={<TeacherComments />} />
+        <Route path="attendance/:groupId" element={<TeacherAttendance />} />
         <Route path="homework/:groupId" element={<TeacherHomework />} />
       </Route>
       <Route

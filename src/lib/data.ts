@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-import type { Profile, Group, Grade, News, Homework, Comment } from '@/types'
+import type { Profile, Group, Grade, News, Homework, Comment, Attendance } from '@/types'
 import { supabase } from './supabase'
 import { globalDb } from './globalDb'
 
@@ -150,6 +150,7 @@ export async function updateProfile(id: string, data: Partial<Pick<Profile, 'fir
         news: await globalDb.getNews(),
         homework: [],
         comments: [],
+        attendance: [],
         passwords: {}
       })
       return updated
@@ -383,4 +384,65 @@ export const commentSuggestions = {
 export async function getPassword(profileId: string): Promise<string> {
   if (!SUPABASE_ENABLED || !supabase) return globalDb.getPassword(profileId)
   return 'Parol ko\'rib bo\'lmaydi'
+}
+
+// Attendance functions
+export async function markAttendance(
+  student_id: string,
+  teacher_id: string,
+  date: string,
+  status: 'keldi' | 'kelmadi'
+): Promise<Attendance> {
+  if (!SUPABASE_ENABLED || !supabase) return globalDb.markAttendance(student_id, teacher_id, date, status)
+  
+  // Check if attendance already exists for this student on this date
+  const { data: existing } = await supabase
+    .from('attendance')
+    .select('*')
+    .eq('student_id', student_id)
+    .eq('date', date)
+    .single()
+  
+  if (existing) {
+    // Update existing attendance
+    const { data, error } = await supabase
+      .from('attendance')
+      .update({ status, teacher_id })
+      .eq('id', existing.id)
+      .select()
+      .single()
+    if (error) throw new Error(error.message)
+    return data as Attendance
+  } else {
+    // Create new attendance
+    const { data, error } = await supabase
+      .from('attendance')
+      .insert({ student_id, teacher_id, date, status })
+      .select()
+      .single()
+    if (error) throw new Error(error.message)
+    return data as Attendance
+  }
+}
+
+export async function getAttendanceByStudent(student_id: string): Promise<Attendance[]> {
+  if (!SUPABASE_ENABLED || !supabase) return globalDb.getAttendanceByStudent(student_id)
+  const { data } = await supabase
+    .from('attendance')
+    .select('*')
+    .eq('student_id', student_id)
+    .order('date', { ascending: false })
+  return (data ?? []) as Attendance[]
+}
+
+export async function getAttendanceByDate(date: string): Promise<Attendance[]> {
+  if (!SUPABASE_ENABLED || !supabase) return globalDb.getAttendanceByDate(date)
+  const { data } = await supabase
+    .from('attendance')
+    .select(`
+      *,
+      student:profiles!attendance_student_id_fkey(*)
+    `)
+    .eq('date', date)
+  return (data ?? []) as Attendance[]
 }

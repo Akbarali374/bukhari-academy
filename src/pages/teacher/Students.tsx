@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { getStudentsByGroup, getGroups } from '@/lib/data'
 import type { Profile } from '@/types'
 import type { Group } from '@/types'
-import { ArrowLeft, Award, MessageSquare, BookOpen } from 'lucide-react'
+import { ArrowLeft, Award, Users, BookOpen } from 'lucide-react'
 
 export default function TeacherStudents() {
   const { groupId } = useParams<{ groupId: string }>()
@@ -34,13 +34,22 @@ export default function TeacherStudents() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{groupName}</h1>
           <p className="text-gray-500 dark:text-gray-400">O'quvchilar ro'yxati</p>
         </div>
-        <Link 
-          to={`/teacher/homework/${groupId}`}
-          className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-medium w-full sm:w-auto"
-        >
-          <BookOpen className="w-5 h-5" />
-          Uyga vazifalar
-        </Link>
+        <div className="flex gap-2">
+          <Link 
+            to={`/teacher/attendance/${groupId}`}
+            className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium"
+          >
+            <Users className="w-5 h-5" />
+            Davomat
+          </Link>
+          <Link 
+            to={`/teacher/homework/${groupId}`}
+            className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-medium"
+          >
+            <BookOpen className="w-5 h-5" />
+            Uyga vazifalar
+          </Link>
+        </div>
       </div>
       {loading ? (
         <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-2 border-primary-500 border-t-transparent" /></div>
@@ -69,12 +78,6 @@ export default function TeacherStudents() {
                         >
                           <Award className="w-4 h-4" /> Baho
                         </Link>
-                        <Link 
-                          to={`/teacher/comments/${s.id}`} 
-                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-sm font-medium hover:bg-green-200 dark:hover:bg-green-800/40"
-                        >
-                          <MessageSquare className="w-4 h-4" /> Izoh
-                        </Link>
                       </div>
                     </td>
                   </tr>
@@ -102,12 +105,6 @@ export default function TeacherStudents() {
                       className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 text-sm font-medium hover:bg-primary-200 dark:hover:bg-primary-800/40"
                     >
                       <Award className="w-4 h-4" /> Baho qo'shish
-                    </Link>
-                    <Link 
-                      to={`/teacher/comments/${s.id}`} 
-                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-sm font-medium hover:bg-green-200 dark:hover:bg-green-800/40"
-                    >
-                      <MessageSquare className="w-4 h-4" /> Izoh yozish
                     </Link>
                   </div>
                 </div>
