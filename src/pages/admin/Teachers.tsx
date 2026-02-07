@@ -22,11 +22,36 @@ export default function AdminTeachers() {
     setSubmitting(true)
     const result = await createTeacher(email.trim(), firstName.trim(), lastName.trim(), password)
     setSubmitting(false)
+    
     if ('error' in result) {
-      toast.error(result.error)
+      // Email allaqachon mavjud bo'lsa
+      if (result.error.includes('email') || result.error.includes('allaqachon') || result.error.includes('mavjud')) {
+        toast.error(`❌ Bu email allaqachon mavjud: ${email}`, {
+          duration: 4000,
+          style: {
+            background: '#ef4444',
+            color: '#fff',
+            fontSize: '16px',
+            fontWeight: 'bold'
+          }
+        })
+      } else {
+        toast.error(result.error)
+      }
       return
     }
-    toast.success('Ustoz qoshildi')
+    
+    // Muvaffaqiyatli yaratildi
+    toast.success(`✅ Ustoz muvaffaqiyatli qo'shildi!\n📧 Email: ${email}\n🔑 Parol: ${password}`, {
+      duration: 5000,
+      style: {
+        background: '#10b981',
+        color: '#fff',
+        fontSize: '16px',
+        fontWeight: 'bold'
+      }
+    })
+    
     setModal(false)
     setEmail('')
     setFirstName('')
