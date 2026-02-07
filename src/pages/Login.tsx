@@ -35,41 +35,57 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100 dark:from-gray-900 dark:to-gray-800 px-4 py-8">
       <button
         type="button"
         onClick={toggleTheme}
-        className="absolute top-4 right-4 p-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+        className="absolute top-4 right-4 p-2 rounded-lg bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 shadow-md hover:shadow-lg transition-shadow"
         aria-label="Tema"
       >
         {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
       </button>
 
       <div className="w-full max-w-md">
-        <a
-          href="/login"
-          className="flex items-center justify-center gap-3 mb-8 no-underline group"
-          aria-label="Bukhari Academy — bosh sahifa"
-        >
-          <span className="flex items-center justify-center w-14 h-14 rounded-xl bg-green-500 group-hover:bg-green-600 text-white shadow-lg shadow-green-500/30 transition-colors">
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6-3m-6 3l6-3m-6 3V7m6 10v4m-6-4v4" />
-            </svg>
-          </span>
-          <div className="text-left">
-            <h1 className="text-2xl font-bold text-green-600 dark:text-green-400 group-hover:text-green-700 dark:group-hover:text-green-300 transition-colors">Bukhari Academy</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">O'quv markazi</p>
+        {/* Logo va xush kelibsiz */}
+        <div className="text-center mb-8 animate-fadeIn">
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <div className="relative animate-scaleIn">
+              <div className="w-32 h-32 rounded-full bg-white dark:bg-gray-800 shadow-2xl flex items-center justify-center border-4 border-green-500 hover:scale-110 transition-transform duration-300">
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-green-600 dark:text-green-400">BA</div>
+                  <div className="text-xs font-semibold text-green-600 dark:text-green-400 mt-1">BUKHARI</div>
+                  <div className="text-[10px] text-green-500 dark:text-green-500">ACADEMY</div>
+                </div>
+              </div>
+              {/* Ruchka ushlab turgan bola emoji */}
+              <div className="absolute -bottom-2 -right-2 text-4xl animate-bounce">
+                ✍️
+              </div>
+            </div>
           </div>
-        </a>
 
+          {/* Xush kelibsiz xabari */}
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 animate-slideIn">
+            Bukhari Academy
+          </h1>
+          <p className="text-lg text-green-600 dark:text-green-400 font-medium mb-1 animate-slideIn" style={{ animationDelay: '0.1s' }}>
+            Kundaligingizga xush kelibsiz! 📚
+          </p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 animate-slideIn" style={{ animationDelay: '0.2s' }}>
+            Zamonaviy ta'lim platformasi
+          </p>
+        </div>
+
+        {/* Login forma */}
         <form
           onSubmit={handleSubmit}
-          className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 space-y-4"
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-8 space-y-5 animate-scaleIn hover:shadow-3xl transition-shadow duration-300"
+          style={{ animationDelay: '0.3s' }}
         >
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Email
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              📧 Email
             </label>
             <input
               id="email"
@@ -77,13 +93,13 @@ export default function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="email@example.com"
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
               required
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Parol
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              🔒 Parol
             </label>
             <input
               id="password"
@@ -91,18 +107,32 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
               required
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+            className="w-full py-3.5 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >
-            {loading ? 'Kirish...' : 'Kirish'}
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+                Kirish...
+              </span>
+            ) : (
+              '🚀 Kirish'
+            )}
           </button>
         </form>
+
+        {/* Footer */}
+        <div className="mt-6 text-center">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            © 2024 Bukhari Academy. Barcha huquqlar himoyalangan.
+          </p>
+        </div>
       </div>
     </div>
   )

@@ -1,5 +1,8 @@
 // Vercel Serverless Function - O'zingizning API serveringiz
-// Bu barcha telefonlar uchun ishlaydi
+// HIMOYALANGAN - Faqat autentifikatsiya bilan ishlaydi
+
+// API kaliti - Bu maxfiy kalit, faqat sizning saytingiz biladi
+const API_SECRET_KEY = 'bukhari_academy_secret_2024_sanobarhon'
 
 let globalDatabase = {
   profiles: [
@@ -30,18 +33,43 @@ let globalDatabase = {
   comments: [],
   passwords: {
     'admin-1': 'admin.sanobarhon.2003'
+  },
+  emailConfig: {
+    fromEmail: 'bukhariacademy256@gmail.com',
+    serviceId: '',
+    templateId: '',
+    publicKey: ''
   }
 }
 
 export default function handler(req, res) {
-  // CORS headers - barcha telefonlardan kirish uchun
-  res.setHeader('Access-Control-Allow-Origin', '*')
+  // CORS headers - faqat sizning saytingizdan
+  const origin = req.headers.origin
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://bukhari-academy.vercel.app',
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null
+  ].filter(Boolean)
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+  }
+  
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-API-Key')
 
   // OPTIONS request uchun
   if (req.method === 'OPTIONS') {
     res.status(200).end()
+    return
+  }
+
+  // API kalitini tekshirish
+  const apiKey = req.headers['x-api-key']
+  if (apiKey !== API_SECRET_KEY) {
+    console.log('❌ Noto\'g\'ri API kaliti:', apiKey)
+    res.status(403).json({ error: 'Ruxsat yo\'q - API kaliti noto\'g\'ri' })
     return
   }
 
@@ -69,8 +97,9 @@ export default function handler(req, res) {
       console.log('📤 POST/PUT request - Ma\'lumotlar saqlandi:', newData.profiles.length, 'foydalanuvchi')
       res.status(200).json({ 
         success: true, 
-        message: 'Ma\'lumotlar saqlandi',
-        profiles_count: newData.profiles.length 
+        message: 'Ma\'lumotlar BARCHA TELEFONLARGA yuborildi!',
+        profiles_count: newData.profiles.length,
+        timestamp: new Date().toISOString()
       })
       return
     } catch (error) {

@@ -17,6 +17,9 @@ class GlobalDatabaseService {
   
   // O'ZINGIZNING API SERVERINGIZ - Vercel Serverless Function
   private readonly API_URL = '/api/database'
+  
+  // API KALITI - Himoya uchun
+  private readonly API_KEY = 'bukhari_academy_secret_2024_sanobarhon'
 
   async loadDatabase(): Promise<GlobalDatabase> {
     const now = Date.now()
@@ -29,7 +32,8 @@ class GlobalDatabaseService {
       const response = await fetch(`${this.API_URL}?t=${now}`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-API-Key': this.API_KEY
         }
       })
       
@@ -41,6 +45,8 @@ class GlobalDatabaseService {
           console.log('🚀 API Server: Ma\'lumotlar yuklandi -', data.profiles.length, 'foydalanuvchi')
           return data
         }
+      } else if (response.status === 403) {
+        console.error('❌ API Server: Ruxsat yo\'q (403)')
       } else {
         console.error('API Server xatosi:', response.status)
       }
@@ -111,7 +117,8 @@ class GlobalDatabaseService {
       const response = await fetch(this.API_URL, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-API-Key': this.API_KEY
         },
         body: JSON.stringify(data)
       })
@@ -126,6 +133,8 @@ class GlobalDatabaseService {
         // Boshqa tab'larga signal
         this.broadcastUpdate()
         return
+      } else if (response.status === 403) {
+        console.error('❌ API Server: Ruxsat yo\'q (403)')
       } else {
         console.error('API Server saqlash xatosi:', response.status)
       }

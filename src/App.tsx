@@ -1,7 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/hooks/useTheme'
+import LoadingScreen from '@/components/LoadingScreen'
 import Login from '@/pages/Login'
 import AdminLayout from '@/layouts/AdminLayout'
 import TeacherLayout from '@/layouts/TeacherLayout'
@@ -41,9 +42,22 @@ function PrivateRoute({ children, allowed }: { children: React.ReactNode; allowe
 
 export default function App() {
   const { initTheme } = useTheme()
+  const [isLoading, setIsLoading] = useState(true)
+  
   useEffect(() => {
     initTheme()
+    
+    // Loading screen 2 soniya ko'rsatish
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 2000)
+    
+    return () => clearTimeout(timer)
   }, [initTheme])
+
+  if (isLoading) {
+    return <LoadingScreen />
+  }
 
   return (
     <Routes>
