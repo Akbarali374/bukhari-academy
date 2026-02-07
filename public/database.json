@@ -7,7 +7,7 @@
       "last_name": "Bukhari",
       "role": "admin",
       "group_id": null,
-      "password": "admin123",
+      "password": "admin.sanobarhon.2003",
       "created_at": "2024-01-01T00:00:00.000Z",
       "updated_at": "2024-01-01T00:00:00.000Z"
     }
@@ -27,6 +27,6 @@
   "homework": [],
   "comments": [],
   "passwords": {
-    "admin-1": "admin123"
+    "admin-1": "admin.sanobarhon.2003"
   }
 }

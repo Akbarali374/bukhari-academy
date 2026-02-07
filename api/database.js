@@ -29,7 +29,7 @@ let globalDatabase = {
   homework: [],
   comments: [],
   passwords: {
-    'admin-1': 'admin123'
+    'admin-1': 'admin.sanobarhon.2003'
   }
 }
 
