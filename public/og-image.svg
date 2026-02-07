@@ -1,0 +1,17 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#047857"/>
+  
+  <!-- Circle -->
+  <circle cx="600" cy="315" r="200" fill="white"/>
+  
+  <!-- BA Text -->
+  <text x="600" y="280" font-family="Arial, sans-serif" font-size="140" font-weight="bold" fill="#047857" text-anchor="middle">BA</text>
+  
+  <!-- BUKHARI ACADEMY Text -->
+  <text x="600" y="360" font-family="Arial, sans-serif" font-size="32" font-weight="600" fill="#047857" text-anchor="middle">BUKHARI</text>
+  <text x="600" y="395" font-family="Arial, sans-serif" font-size="24" font-weight="400" fill="#047857" text-anchor="middle">ACADEMY</text>
+  
+  <!-- Bottom Text -->
+  <text x="600" y="550" font-family="Arial, sans-serif" font-size="28" font-weight="500" fill="white" text-anchor="middle">O'quv markazi — Zamonaviy ta'lim platformasi</text>
+</svg>
