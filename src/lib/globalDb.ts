@@ -13,15 +13,10 @@ interface GlobalDatabase {
 class GlobalDatabaseService {
   private cache: GlobalDatabase | null = null
   private cacheTime = 0
-  private readonly CACHE_DURATION = 500 // 0.5 soniya - juda tez
+  private readonly CACHE_DURATION = 2000 // 2 soniya
   
-  // ENG KUCHLI API - Supabase Real-time Database
-  private readonly SUPABASE_URL = 'https://xyzcompany.supabase.co'
-  private readonly SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5emNvbXBhbnkiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzY0NjQwMCwiZXhwIjoxOTU5MjIyNDAwfQ.abc123def456ghi789'
-  
-  // Fallback - JSONBin.io
-  private readonly JSONBIN_URL = 'https://api.jsonbin.io/v3/b/67a3f2e6ad19ca34f8e8d3c5'
-  private readonly JSONBIN_KEY = '$2a$10$wN9K0yF4mP5qR9sT3uL6eX8wZ7bC5dA1fG4hJ6kM9nP2qS0tV8uY'
+  // O'ZINGIZNING API SERVERINGIZ - Vercel Serverless Function
+  private readonly API_URL = '/api/database'
 
   async loadDatabase(): Promise<GlobalDatabase> {
     const now = Date.now()
@@ -29,53 +24,31 @@ class GlobalDatabaseService {
       return this.cache
     }
 
-    // 1. Supabase Real-time Database (ENG KUCHLI)
     try {
-      const response = await fetch(`${this.SUPABASE_URL}/rest/v1/global_database?select=*`, {
+      // O'z API serverimizdan ma'lumotlarni olish
+      const response = await fetch(`${this.API_URL}?t=${now}`, {
+        method: 'GET',
         headers: {
-          'apikey': this.SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${this.SUPABASE_ANON_KEY}`,
           'Content-Type': 'application/json'
         }
       })
       
       if (response.ok) {
         const data = await response.json()
-        if (data && data.length > 0) {
-          const dbData = data[0].data
-          this.cache = dbData
-          this.cacheTime = now
-          console.log('🚀 Supabase: Ma\'lumotlar yuklandi -', dbData.profiles.length, 'foydalanuvchi')
-          return dbData
-        }
-      }
-    } catch (error) {
-      console.error('Supabase xatosi:', error)
-    }
-
-    // 2. JSONBin.io (Fallback)
-    try {
-      const response = await fetch(`${this.JSONBIN_URL}/latest`, {
-        headers: {
-          'X-Master-Key': this.JSONBIN_KEY,
-          'X-Bin-Meta': 'false'
-        }
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        if (data && data.profiles) {
+        if (data && data.profiles && Array.isArray(data.profiles)) {
           this.cache = data
           this.cacheTime = now
-          console.log('🌐 JSONBin: Ma\'lumotlar yuklandi -', data.profiles.length, 'foydalanuvchi')
+          console.log('🚀 API Server: Ma\'lumotlar yuklandi -', data.profiles.length, 'foydalanuvchi')
           return data
         }
+      } else {
+        console.error('API Server xatosi:', response.status)
       }
     } catch (error) {
-      console.error('JSONBin xatosi:', error)
+      console.error('API Server xatosi:', error)
     }
 
-    // 3. localStorage (Final fallback)
+    // Fallback - localStorage
     return this.getFallbackData()
   }
 
@@ -133,76 +106,34 @@ class GlobalDatabaseService {
     this.cache = data
     this.cacheTime = Date.now()
     
-    // 1. Supabase'ga saqlash (ENG KUCHLI)
     try {
-      const response = await fetch(`${this.SUPABASE_URL}/rest/v1/global_database`, {
+      // O'z API serverimizga saqlash
+      const response = await fetch(this.API_URL, {
         method: 'POST',
         headers: {
-          'apikey': this.SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${this.SUPABASE_ANON_KEY}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify({
-          id: 1,
-          data: data,
-          updated_at: new Date().toISOString()
-        })
-      })
-
-      if (response.ok) {
-        console.log('🚀 Supabase: BARCHA TELEFONLARGA YUBORILDI!')
-        localStorage.setItem('bukhari_global_db', JSON.stringify(data))
-        this.broadcastUpdate()
-        return
-      } else {
-        // Agar POST ishlamasa, PATCH bilan yangilash
-        const updateResponse = await fetch(`${this.SUPABASE_URL}/rest/v1/global_database?id=eq.1`, {
-          method: 'PATCH',
-          headers: {
-            'apikey': this.SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${this.SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            data: data,
-            updated_at: new Date().toISOString()
-          })
-        })
-
-        if (updateResponse.ok) {
-          console.log('🚀 Supabase: Ma\'lumotlar yangilandi!')
-          localStorage.setItem('bukhari_global_db', JSON.stringify(data))
-          this.broadcastUpdate()
-          return
-        }
-      }
-    } catch (error) {
-      console.error('Supabase saqlash xatosi:', error)
-    }
-
-    // 2. JSONBin.io'ga saqlash (Fallback)
-    try {
-      const response = await fetch(this.JSONBIN_URL, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Master-Key': this.JSONBIN_KEY
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(data)
       })
 
       if (response.ok) {
-        console.log('🌐 JSONBin: BARCHA TELEFONLARGA YUBORILDI!')
+        const result = await response.json()
+        console.log('🚀 API Server: BARCHA TELEFONLARGA YUBORILDI!', result.profiles_count, 'foydalanuvchi')
+        
+        // localStorage'ga ham saqlash
         localStorage.setItem('bukhari_global_db', JSON.stringify(data))
+        
+        // Boshqa tab'larga signal
         this.broadcastUpdate()
         return
+      } else {
+        console.error('API Server saqlash xatosi:', response.status)
       }
     } catch (error) {
-      console.error('JSONBin saqlash xatosi:', error)
+      console.error('API Server saqlash xatosi:', error)
     }
 
-    // 3. localStorage (Final fallback)
+    // Fallback - localStorage
     localStorage.setItem('bukhari_global_db', JSON.stringify(data))
     this.broadcastUpdate()
     console.log('💾 localStorage\'ga saqlandi -', data.profiles.length, 'foydalanuvchi')
@@ -374,7 +305,7 @@ class GlobalDatabaseService {
     console.log('🔄 Cache tozalandi')
   }
 
-  // Export/Import functions
+  // Export/Import functions (Ma'lumot ulashish sahifasi uchun)
   exportData(): string {
     const data = this.cache || this.getFallbackData()
     return JSON.stringify(data, null, 2)
