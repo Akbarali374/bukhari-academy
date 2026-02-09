@@ -11,6 +11,20 @@ export default function AdminPersistentStorage() {
 
   useEffect(() => {
     setIsConfigured(persistentStorage.isConfigured())
+    
+    // Agar sozlangan bo'lsa, localStorage'dan yuklash
+    if (persistentStorage.isConfigured()) {
+      try {
+        const stored = localStorage.getItem('bukhari_persistent_config')
+        if (stored) {
+          const config = JSON.parse(stored)
+          if (config.gistId) setGistId(config.gistId)
+          if (config.githubToken) setGithubToken(config.githubToken)
+        }
+      } catch (error) {
+        console.error('Config yuklashda xato:', error)
+      }
+    }
   }, [])
 
   async function handleSave() {
