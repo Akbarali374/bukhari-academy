@@ -14,6 +14,10 @@ import {
   Menu,
   X,
   RefreshCw,
+  BarChart3,
+  DollarSign,
+  FileText,
+  Bot,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/hooks/useTheme'
@@ -23,6 +27,9 @@ const adminNav = [
   { to: '/admin/teachers', icon: Users, label: 'Ustozlar' },
   { to: '/admin/groups', icon: FolderKanban, label: 'Guruhlar' },
   { to: '/admin/students', icon: GraduationCap, label: 'O\'quvchilar' },
+  { to: '/admin/statistics', icon: BarChart3, label: 'Statistika va Reyting' },
+  { to: '/admin/payments', icon: DollarSign, label: 'To\'lovlar' },
+  { to: '/admin/ai-settings', icon: Bot, label: 'AI Sozlamalari' },
   { to: '/admin/logins', icon: Key, label: 'Loginlar ro\'yxati' },
   { to: '/admin/create-login', icon: UserPlus, label: 'Login yaratish' },
   { to: '/admin/news', icon: Mail, label: 'Yangiliklar' },

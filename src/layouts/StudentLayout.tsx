@@ -3,7 +3,7 @@ import { Outlet, NavLink } from 'react-router-dom'
 import { useTheme } from '@/hooks/useTheme'
 import { useAuth } from '@/context/AuthContext'
 import { useUnreadNews } from '@/hooks/useUnreadNews'
-import { User, Award, Moon, Sun, LogOut, Menu, X, Newspaper, BookOpen } from 'lucide-react'
+import { User, Award, Moon, Sun, LogOut, Menu, X, Newspaper, BookOpen, FileText } from 'lucide-react'
 
 export default function StudentLayout() {
   const { theme, toggleTheme } = useTheme()
@@ -54,6 +54,17 @@ export default function StudentLayout() {
             >
               <BookOpen className="w-4 h-4" />
               Uyga vazifalar
+            </NavLink>
+            <NavLink
+              to="/student/tests"
+              className={({ isActive }) =>
+                `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${
+                  isActive ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`
+              }
+            >
+              <FileText className="w-4 h-4" />
+              Testlar
             </NavLink>
             <NavLink
               to="/student/news"
@@ -135,6 +146,18 @@ export default function StudentLayout() {
               >
                 <BookOpen className="w-4 h-4" />
                 Uyga vazifalar
+              </NavLink>
+              <NavLink
+                to="/student/tests"
+                onClick={closeMobileMenu}
+                className={({ isActive }) =>
+                  `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${
+                    isActive ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`
+                }
+              >
+                <FileText className="w-4 h-4" />
+                Testlar
               </NavLink>
               <NavLink
                 to="/student/news"

@@ -80,3 +80,60 @@ export interface Attendance {
   student?: Profile
   teacher?: Profile
 }
+
+// To'lov tizimi
+export interface Payment {
+  id: string
+  student_id: string
+  amount: number
+  month: string // "2024-02" formatida
+  status: 'to\'landi' | 'to\'lanmadi' | 'qisman'
+  paid_amount: number
+  payment_date: string | null
+  note: string | null
+  created_at: string
+  student?: Profile
+}
+
+// Test tizimi
+export type TestLevel = 'beginner' | 'intermediate' | 'advanced'
+export type TestQuestionType = 'single' | 'multiple'
+
+export interface TestQuestion {
+  id: string
+  level: TestLevel
+  question: string
+  options: string[] // 4 ta variant
+  correct_answer: number[] // To'g'ri javob indekslari (0-3)
+  type: TestQuestionType
+  points: number // Har bir savol uchun ball
+  created_at: string
+}
+
+export interface TestAttempt {
+  id: string
+  student_id: string
+  level: TestLevel
+  questions: TestQuestion[]
+  answers: number[][] // O'quvchi javoblari
+  score: number // 100 dan
+  total_questions: number
+  correct_answers: number
+  started_at: string
+  completed_at: string | null
+  duration: number // Soniyalarda
+  student?: Profile
+}
+
+export interface TestResult {
+  id: string
+  attempt_id: string
+  student_id: string
+  level: TestLevel
+  score: number
+  percentage: number
+  grade: string // "A'lo", "Yaxshi", "Qoniqarli", "Qoniqarsiz"
+  created_at: string
+  student?: Profile
+  attempt?: TestAttempt
+}

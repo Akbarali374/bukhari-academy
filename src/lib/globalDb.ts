@@ -1,4 +1,4 @@
-import type { Profile, Group, Grade, News, Homework, Comment, Attendance } from '@/types'
+import type { Profile, Group, Grade, News, Homework, Comment, Attendance, Payment, TestQuestion, TestAttempt, TestResult } from '@/types'
 import { persistentStorage } from './persistentStorage'
 
 interface GlobalDatabase {
@@ -9,6 +9,10 @@ interface GlobalDatabase {
   homework: Homework[]
   comments: Comment[]
   attendance: Attendance[]
+  payments: Payment[]
+  testQuestions: TestQuestion[]
+  testAttempts: TestAttempt[]
+  testResults: TestResult[]
   passwords: Record<string, string>
 }
 

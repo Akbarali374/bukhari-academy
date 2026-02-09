@@ -14,6 +14,9 @@ import AdminStudents from '@/pages/admin/Students'
 import AdminLogins from '@/pages/admin/Logins'
 import AdminCreateLogin from '@/pages/admin/CreateLogin'
 import AdminMonthlyReports from '@/pages/admin/MonthlyReports'
+import AdminStatistics from '@/pages/admin/Statistics'
+import AdminPayments from '@/pages/admin/Payments'
+import AdminAISettings from '@/pages/admin/AISettings'
 import TeacherGroups from '@/pages/teacher/Groups'
 import TeacherStudents from '@/pages/teacher/Students'
 import TeacherAddGrade from '@/pages/teacher/AddGrade'
@@ -21,6 +24,7 @@ import TeacherAttendance from '@/pages/teacher/Attendance'
 import TeacherHomework from '@/pages/teacher/Homework'
 import StudentProfile from '@/pages/student/Profile'
 import StudentGrades from '@/pages/student/Grades'
+import StudentTests from '@/pages/student/Tests'
 import AdminNews from '@/pages/admin/News'
 import AdminDataSync from '@/pages/admin/DataSync'
 import AdminPersistentStorage from '@/pages/admin/PersistentStorage'
@@ -78,6 +82,9 @@ export default function App() {
         <Route path="logins" element={<AdminLogins />} />
         <Route path="create-login" element={<AdminCreateLogin />} />
         <Route path="news" element={<AdminNews />} />
+        <Route path="statistics" element={<AdminStatistics />} />
+        <Route path="payments" element={<AdminPayments />} />
+        <Route path="ai-settings" element={<AdminAISettings />} />
         <Route path="data-sync" element={<AdminDataSync />} />
         <Route path="persistent-storage" element={<AdminPersistentStorage />} />
         <Route path="monthly-reports" element={<AdminMonthlyReports />} />
@@ -108,6 +115,7 @@ export default function App() {
         <Route index element={<StudentGrades />} />
         <Route path="profile" element={<StudentProfile />} />
         <Route path="grades" element={<StudentGrades />} />
+        <Route path="tests" element={<StudentTests />} />
         <Route path="homework" element={<StudentHomework />} />
         <Route path="news" element={<StudentNews />} />
       </Route>
