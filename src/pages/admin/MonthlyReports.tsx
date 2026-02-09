@@ -37,10 +37,19 @@ export default function AdminMonthlyReports() {
     const saved = localStorage.getItem('emailjs_config')
     if (saved) {
       try {
-        setEmailConfig(JSON.parse(saved))
+        const config = JSON.parse(saved)
+        setEmailConfig(config)
       } catch (error) {
         console.error('Config parse error:', error)
       }
+    } else {
+      // Default qiymatlar - sizning EmailJS hisobingiz
+      setEmailConfig({
+        fromEmail: 'bukhariacademy256@gmail.com',
+        serviceId: 'service_xxxxxxx', // Bu yerga o'zingizning Service ID ni kiriting
+        templateId: 'template_xxxxxxx', // Bu yerga o'zingizning Template ID ni kiriting
+        publicKey: 'xxxxxxxxxxxxxxxx' // Bu yerga o'zingizning Public Key ni kiriting
+      })
     }
   }, [])
 
@@ -266,6 +275,20 @@ ${emailConfig.fromEmail}`
               </button>
             </div>
 
+            {!emailConfig.serviceId || emailConfig.serviceId === 'service_xxxxxxx' ? (
+              <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                <p className="text-sm text-amber-800 dark:text-amber-200">
+                  ⚠️ EmailJS sozlanmagan. Email yuborish uchun quyidagi sozlamalarni to'ldiring.
+                </p>
+              </div>
+            ) : (
+              <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                <p className="text-sm text-green-800 dark:text-green-200">
+                  ✅ EmailJS sozlangan! Email yuborishingiz mumkin.
+                </p>
+              </div>
+            )}
+
             {showConfig && (
               <div className="space-y-3">
                 <div>
@@ -279,6 +302,9 @@ ${emailConfig.fromEmail}`
                     placeholder="bukhariacademy256@gmail.com"
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Sizning Gmail manzilingiz
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -291,6 +317,9 @@ ${emailConfig.fromEmail}`
                     placeholder="service_xxxxxxx"
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    EmailJS Dashboard → Email Services → Service ID
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -303,6 +332,9 @@ ${emailConfig.fromEmail}`
                     placeholder="template_xxxxxxx"
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    EmailJS Dashboard → Email Templates → Template ID
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -315,6 +347,9 @@ ${emailConfig.fromEmail}`
                     placeholder="xxxxxxxxxxxxxxxx"
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    EmailJS Dashboard → Account → Public Key
+                  </p>
                 </div>
                 <button
                   onClick={saveConfig}
@@ -322,9 +357,24 @@ ${emailConfig.fromEmail}`
                 >
                   Saqlash
                 </button>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  EmailJS: <a href="https://www.emailjs.com" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">emailjs.com</a> da ro'yxatdan o'ting
-                </p>
+                
+                {/* Yo'riqnoma */}
+                <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                    📖 Qanday sozlash?
+                  </h4>
+                  <ol className="space-y-1 text-xs text-blue-800 dark:text-blue-200">
+                    <li>1. <a href="https://www.emailjs.com" target="_blank" rel="noopener noreferrer" className="underline">emailjs.com</a> ga kiring</li>
+                    <li>2. Gmail bilan ro'yxatdan o'ting</li>
+                    <li>3. Email Services → Add New Service → Gmail</li>
+                    <li>4. Gmail hisobingizni ulang</li>
+                    <li>5. Service ID ni ko'chiring</li>
+                    <li>6. Email Templates → Create New Template</li>
+                    <li>7. Template yarating va Template ID ni ko'chiring</li>
+                    <li>8. Account → Public Key ni ko'chiring</li>
+                    <li>9. Yuqoridagi maydonlarga kiriting va saqlang</li>
+                  </ol>
+                </div>
               </div>
             )}
           </div>
@@ -473,7 +523,7 @@ ${emailConfig.fromEmail}`
             <button
               type="button"
               onClick={handleSendSelected}
-              disabled={sending || selectedCount === 0}
+              disabled={sending || selectedCount === 0 || !emailConfig.serviceId || emailConfig.serviceId === 'service_xxxxxxx'}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {sending ? (
@@ -489,9 +539,15 @@ ${emailConfig.fromEmail}`
               )}
             </button>
 
-            {!emailConfig.serviceId && (
+            {(!emailConfig.serviceId || emailConfig.serviceId === 'service_xxxxxxx') && (
               <p className="mt-4 text-sm text-amber-600 dark:text-amber-400 text-center">
-                ⚠️ Email yuborish uchun avval Gmail sozlamalarini kiriting
+                ⚠️ Email yuborish uchun avval Gmail sozlamalarini to'ldiring (yuqorida "Sozlash" tugmasini bosing)
+              </p>
+            )}
+            
+            {selectedCount === 0 && (
+              <p className="mt-4 text-sm text-gray-500 dark:text-gray-400 text-center">
+                ℹ️ Email yuborish uchun o'quvchilarni tanlang
               </p>
             )}
           </div>

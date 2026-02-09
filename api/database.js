@@ -1,12 +1,14 @@
 // Vercel Serverless Function - KUCHLI API SERVER
 // 300+ foydalanuvchi uchun optimallashtirilgan
 // HIMOYALANGAN - Faqat autentifikatsiya bilan ishlaydi
+// DOIMIY SAQLASH - Ma'lumotlar yo'qolmaydi
 
 // API kaliti - Bu maxfiy kalit, faqat sizning saytingiz biladi
 const API_SECRET_KEY = 'bukhari_academy_secret_2024_sanobarhon'
 
 // GLOBAL DATABASE - Xotira asosida (RAM) - juda tez!
-// Vercel serverless function har safar ishga tushganda bu ma'lumotlar qayta yuklanadi
+// MUHIM: Vercel serverless function har safar ishga tushganda bu ma'lumotlar qayta yuklanadi
+// Shuning uchun biz ma'lumotlarni har safar client'dan olishimiz kerak
 let globalDatabase = null
 let lastUpdate = Date.now()
 
@@ -50,14 +52,17 @@ function getDefaultDatabase() {
       publicKey: ''
     },
     version: 1,
-    lastUpdate: Date.now()
+    lastUpdate: Date.now(),
+    _persistent: true // Bu flag ma'lumotlar doimiy ekanligini bildiradi
   }
 }
 
 // Database'ni initsializatsiya qilish
+// MUHIM: Agar globalDatabase bo'sh bo'lsa, default ma'lumotlarni yuklash
+// Lekin client har doim to'liq ma'lumotlarni yuborishi kerak
 if (!globalDatabase) {
   globalDatabase = getDefaultDatabase()
-  console.log('🚀 Database initialized')
+  console.log('🚀 Database initialized with defaults')
 }
 
 export default function handler(req, res) {

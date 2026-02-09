@@ -1,4 +1,5 @@
 import type { Profile, Group, Grade, News, Homework, Comment, Attendance } from '@/types'
+import { persistentStorage } from './persistentStorage'
 
 interface GlobalDatabase {
   profiles: Profile[]
@@ -35,7 +36,7 @@ class GlobalDatabaseService {
       return this.cache
     }
 
-    // API'dan yuklash
+    // 1. API'dan yuklash
     for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
       try {
         console.log(`🔄 API'dan yuklash urinishi ${attempt}/${this.MAX_RETRIES}`)
@@ -73,6 +74,13 @@ class GlobalDatabaseService {
               console.warn('localStorage saqlashda xato:', e)
             }
             
+            // GitHub Gist'ga ham saqlash (agar sozlangan bo'lsa)
+            if (persistentStorage.isConfigured()) {
+              persistentStorage.saveToGist(data).catch(err => 
+                console.warn('GitHub Gist saqlashda xato:', err)
+              )
+            }
+            
             return data
           }
         } else if (response.status === 403) {
@@ -93,8 +101,27 @@ class GlobalDatabaseService {
       }
     }
 
-    // Fallback - localStorage
-    console.log('⚠️ API ishlamadi, localStorage\'dan yuklash...')
+    // 2. GitHub Gist'dan yuklash (agar API ishlamasa)
+    console.log('⚠️ API ishlamadi, GitHub Gist\'dan yuklash...')
+    if (persistentStorage.isConfigured()) {
+      const gistData = await persistentStorage.loadFromGist()
+      if (gistData) {
+        this.cache = gistData
+        this.cacheTime = now
+        
+        // localStorage'ga ham saqlash
+        try {
+          localStorage.setItem('bukhari_global_db', JSON.stringify(gistData))
+        } catch (e) {
+          console.warn('localStorage saqlashda xato:', e)
+        }
+        
+        return gistData
+      }
+    }
+
+    // 3. Fallback - localStorage
+    console.log('⚠️ GitHub Gist ham ishlamadi, localStorage\'dan yuklash...')
     return this.getFallbackData()
   }
 
@@ -103,7 +130,11 @@ class GlobalDatabaseService {
     if (stored) {
       try {
         const data = JSON.parse(stored)
-        console.log('💾 localStorage dan yuklandi')
+        console.log('💾 localStorage dan yuklandi:', {
+          profiles: data.profiles?.length || 0,
+          groups: data.groups?.length || 0,
+          grades: data.grades?.length || 0
+        })
         return data
       } catch (error) {
         console.error('localStorage parse error:', error)
@@ -144,8 +175,14 @@ class GlobalDatabaseService {
       }
     }
     
-    localStorage.setItem('bukhari_global_db', JSON.stringify(defaultData))
-    console.log('🔄 Default ma\'lumotlar yaratildi')
+    // localStorage'ga saqlash
+    try {
+      localStorage.setItem('bukhari_global_db', JSON.stringify(defaultData))
+      console.log('🔄 Default ma\'lumotlar yaratildi va saqlandi')
+    } catch (error) {
+      console.error('localStorage saqlash xatosi:', error)
+    }
+    
     return defaultData
   }
 
@@ -186,6 +223,17 @@ class GlobalDatabaseService {
             console.warn('localStorage saqlashda xato:', e)
           }
           
+          // GitHub Gist'ga ham saqlash (DOIMIY SAQLASH)
+          if (persistentStorage.isConfigured()) {
+            persistentStorage.saveToGist(data).then(success => {
+              if (success) {
+                console.log('✅ GitHub Gist: BUTUN UMRGA SAQLANDI!')
+              }
+            }).catch(err => 
+              console.warn('GitHub Gist saqlashda xato:', err)
+            )
+          }
+          
           // Boshqa tab'larga signal
           this.broadcastUpdate()
           return
@@ -207,13 +255,19 @@ class GlobalDatabaseService {
       }
     }
 
-    // Fallback - localStorage
-    console.log('⚠️ API ishlamadi, localStorage\'ga saqlash...')
+    // Fallback - localStorage va GitHub Gist
+    console.log('⚠️ API ishlamadi, localStorage va GitHub Gist\'ga saqlash...')
     try {
       localStorage.setItem('bukhari_global_db', JSON.stringify(data))
       localStorage.setItem('bukhari_last_sync', Date.now().toString())
       this.broadcastUpdate()
       console.log('💾 localStorage\'ga saqlandi -', data.profiles.length, 'foydalanuvchi')
+      
+      // GitHub Gist'ga ham saqlash
+      if (persistentStorage.isConfigured()) {
+        await persistentStorage.saveToGist(data)
+        console.log('✅ GitHub Gist: BUTUN UMRGA SAQLANDI!')
+      }
     } catch (error) {
       console.error('❌ localStorage saqlashda xato:', error)
     }

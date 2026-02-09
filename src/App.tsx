@@ -23,6 +23,7 @@ import StudentProfile from '@/pages/student/Profile'
 import StudentGrades from '@/pages/student/Grades'
 import AdminNews from '@/pages/admin/News'
 import AdminDataSync from '@/pages/admin/DataSync'
+import AdminPersistentStorage from '@/pages/admin/PersistentStorage'
 import StudentNews from '@/pages/student/News'
 import StudentHomework from '@/pages/student/Homework'
 
@@ -78,6 +79,7 @@ export default function App() {
         <Route path="create-login" element={<AdminCreateLogin />} />
         <Route path="news" element={<AdminNews />} />
         <Route path="data-sync" element={<AdminDataSync />} />
+        <Route path="persistent-storage" element={<AdminPersistentStorage />} />
         <Route path="monthly-reports" element={<AdminMonthlyReports />} />
       </Route>
       <Route

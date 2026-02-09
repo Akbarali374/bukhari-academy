@@ -26,6 +26,7 @@ const adminNav = [
   { to: '/admin/logins', icon: Key, label: 'Loginlar ro\'yxati' },
   { to: '/admin/create-login', icon: UserPlus, label: 'Login yaratish' },
   { to: '/admin/news', icon: Mail, label: 'Yangiliklar' },
+  { to: '/admin/persistent-storage', icon: RefreshCw, label: 'Doimiy saqlash' },
   { to: '/admin/data-sync', icon: RefreshCw, label: 'Ma\'lumot ulashish' },
   { to: '/admin/monthly-reports', icon: Mail, label: 'Oylik hisobotlar' },
 ]

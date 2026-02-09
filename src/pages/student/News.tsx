@@ -1,15 +1,27 @@
 import { useEffect, useState } from 'react'
 import { getNews } from '@/lib/data'
+import { useUnreadNews } from '@/hooks/useUnreadNews'
 import type { News } from '@/types'
 import { Calendar, User, Newspaper } from 'lucide-react'
 
 export default function StudentNews() {
   const [news, setNews] = useState<News[]>([])
   const [loading, setLoading] = useState(true)
+  const { markAllAsRead } = useUnreadNews()
 
   useEffect(() => {
-    getNews().then(setNews).finally(() => setLoading(false))
+    loadNews()
   }, [])
+
+  async function loadNews() {
+    const newsData = await getNews()
+    setNews(newsData)
+    setLoading(false)
+    
+    // Barcha yangilikni o'qilgan deb belgilash
+    const newsIds = newsData.map(n => n.id)
+    markAllAsRead(newsIds)
+  }
 
   return (
     <div>

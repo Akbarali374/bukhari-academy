@@ -446,3 +446,32 @@ export async function getAttendanceByDate(date: string): Promise<Attendance[]> {
     .eq('date', date)
   return (data ?? []) as Attendance[]
 }
+
+// Delete functions
+export async function deleteProfile(profileId: string): Promise<void> {
+  if (!SUPABASE_ENABLED || !supabase) {
+    const db = await globalDb.loadDatabase()
+    db.profiles = db.profiles.filter(p => p.id !== profileId)
+    // O'quvchining barcha ma'lumotlarini ham o'chirish
+    db.grades = db.grades.filter(g => g.student_id !== profileId)
+    db.homework = db.homework.filter(h => h.student_id !== profileId)
+    db.comments = db.comments.filter(c => c.student_id !== profileId)
+    db.attendance = db.attendance.filter(a => a.student_id !== profileId)
+    delete db.passwords[profileId]
+    await globalDb.saveToLocal(db)
+    return
+  }
+  const { error } = await supabase.from('profiles').delete().eq('id', profileId)
+  if (error) throw new Error(error.message)
+}
+
+export async function deleteGrade(gradeId: string): Promise<void> {
+  if (!SUPABASE_ENABLED || !supabase) {
+    const db = await globalDb.loadDatabase()
+    db.grades = db.grades.filter(g => g.id !== gradeId)
+    await globalDb.saveToLocal(db)
+    return
+  }
+  const { error } = await supabase.from('grades').delete().eq('id', gradeId)
+  if (error) throw new Error(error.message)
+}

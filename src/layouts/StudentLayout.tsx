@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { Outlet, NavLink } from 'react-router-dom'
 import { useTheme } from '@/hooks/useTheme'
 import { useAuth } from '@/context/AuthContext'
+import { useUnreadNews } from '@/hooks/useUnreadNews'
 import { User, Award, Moon, Sun, LogOut, Menu, X, Newspaper, BookOpen } from 'lucide-react'
 
 export default function StudentLayout() {
   const { theme, toggleTheme } = useTheme()
   const { user, logout } = useAuth()
+  const { unreadCount } = useUnreadNews()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const toggleMobileMenu = () => {
@@ -56,13 +58,18 @@ export default function StudentLayout() {
             <NavLink
               to="/student/news"
               className={({ isActive }) =>
-                `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${
+                `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium relative ${
                   isActive ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`
               }
             >
               <Newspaper className="w-4 h-4" />
               Yangiliklar
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-600 rounded-full">
+                  {unreadCount}
+                </span>
+              )}
             </NavLink>
             <NavLink
               to="/student/profile"
@@ -133,13 +140,18 @@ export default function StudentLayout() {
                 to="/student/news"
                 onClick={closeMobileMenu}
                 className={({ isActive }) =>
-                  `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${
+                  `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium relative ${
                     isActive ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`
                 }
               >
                 <Newspaper className="w-4 h-4" />
                 Yangiliklar
+                {unreadCount > 0 && (
+                  <span className="ml-auto flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-600 rounded-full">
+                    {unreadCount}
+                  </span>
+                )}
               </NavLink>
               <NavLink
                 to="/student/profile"
