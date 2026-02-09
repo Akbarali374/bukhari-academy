@@ -39,8 +39,15 @@ export default function AdminMonthlyReports() {
       try {
         const config = JSON.parse(saved)
         setEmailConfig(config)
+        // Agar config saqlangan bo'lsa, sozlamalarni ko'rsatish
+        if (config.serviceId && config.serviceId !== 'service_xxxxxxx') {
+          setShowConfig(false) // Sozlangan bo'lsa yopiq tursin
+        } else {
+          setShowConfig(true) // Sozlanmagan bo'lsa ochiq tursin
+        }
       } catch (error) {
         console.error('Config parse error:', error)
+        setShowConfig(true)
       }
     } else {
       // Default qiymatlar - sizning EmailJS hisobingiz
@@ -50,6 +57,7 @@ export default function AdminMonthlyReports() {
         templateId: 'template_xxxxxxx', // Bu yerga o'zingizning Template ID ni kiriting
         publicKey: 'xxxxxxxxxxxxxxxx' // Bu yerga o'zingizning Public Key ni kiriting
       })
+      setShowConfig(true) // Default bo'lsa ochiq tursin
     }
   }, [])
 
