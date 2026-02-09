@@ -39,7 +39,6 @@ class PersistentStorage {
 
   async saveToGist(data: any): Promise<boolean> {
     if (!this.config.gistId || !this.config.githubToken) {
-      console.log('⚠️ GitHub Gist sozlanmagan')
       return false
     }
 
@@ -59,22 +58,14 @@ class PersistentStorage {
         })
       })
 
-      if (response.ok) {
-        console.log('✅ GitHub Gist\'ga saqlandi')
-        return true
-      } else {
-        console.error('❌ GitHub Gist xatosi:', response.status)
-        return false
-      }
+      return response.ok
     } catch (error) {
-      console.error('❌ GitHub Gist xatosi:', error)
       return false
     }
   }
 
   async loadFromGist(): Promise<any | null> {
     if (!this.config.gistId || !this.config.githubToken) {
-      console.log('⚠️ GitHub Gist sozlanmagan')
       return null
     }
 
@@ -89,15 +80,11 @@ class PersistentStorage {
         const gist = await response.json()
         const file = gist.files['bukhari-academy-db.json']
         if (file && file.content) {
-          const data = JSON.parse(file.content)
-          console.log('✅ GitHub Gist\'dan yuklandi')
-          return data
+          return JSON.parse(file.content)
         }
-      } else {
-        console.error('❌ GitHub Gist xatosi:', response.status)
       }
     } catch (error) {
-      console.error('❌ GitHub Gist xatosi:', error)
+      // Silent fail
     }
 
     return null

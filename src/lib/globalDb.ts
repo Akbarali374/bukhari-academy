@@ -32,15 +32,12 @@ class GlobalDatabaseService {
     
     // Cache'dan qaytarish (agar yangi bo'lsa)
     if (this.cache && (now - this.cacheTime) < this.CACHE_DURATION) {
-      console.log('💾 Cache\'dan yuklandi')
       return this.cache
     }
 
     // 1. API'dan yuklash
     for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
       try {
-        console.log(`🔄 API'dan yuklash urinishi ${attempt}/${this.MAX_RETRIES}`)
-        
         const response = await fetch(`${this.API_URL}?t=${now}`, {
           method: 'GET',
           headers: {
@@ -58,70 +55,53 @@ class GlobalDatabaseService {
             this.cacheTime = now
             this.retryCount = 0
             
-            console.log('✅ API Server: Ma\'lumotlar yuklandi:', {
-              profiles: data.profiles.length,
-              groups: data.groups?.length || 0,
-              grades: data.grades?.length || 0,
-              news: data.news?.length || 0,
-              version: data.version || 1
-            })
-            
             // localStorage'ga backup saqlash
             try {
               localStorage.setItem('bukhari_global_db', JSON.stringify(data))
               localStorage.setItem('bukhari_last_sync', now.toString())
             } catch (e) {
-              console.warn('localStorage saqlashda xato:', e)
+              // Silent fail
             }
             
             // GitHub Gist'ga ham saqlash (agar sozlangan bo'lsa)
             if (persistentStorage.isConfigured()) {
-              persistentStorage.saveToGist(data).catch(err => 
-                console.warn('GitHub Gist saqlashda xato:', err)
-              )
+              persistentStorage.saveToGist(data).catch(() => {})
             }
             
             return data
           }
         } else if (response.status === 403) {
-          console.error('❌ API Server: Ruxsat yo\'q (403)')
-          break // Retry qilmaslik
-        } else {
-          console.error(`❌ API Server xatosi: ${response.status}`)
+          console.error('❌ API: Ruxsat yo\'q')
+          break
         }
       } catch (error) {
-        console.error(`❌ API Server xatosi (urinish ${attempt}):`, error)
+        if (attempt === this.MAX_RETRIES) {
+          console.error('❌ API xatosi:', error)
+        }
       }
       
-      // Keyingi urinishdan oldin kutish (exponential backoff)
+      // Keyingi urinishdan oldin kutish
       if (attempt < this.MAX_RETRIES) {
-        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000)
-        console.log(`⏳ ${delay}ms kutilmoqda...`)
-        await new Promise(resolve => setTimeout(resolve, delay))
+        await new Promise(resolve => setTimeout(resolve, Math.min(1000 * Math.pow(2, attempt - 1), 5000)))
       }
     }
 
-    // 2. GitHub Gist'dan yuklash (agar API ishlamasa)
-    console.log('⚠️ API ishlamadi, GitHub Gist\'dan yuklash...')
+    // 2. GitHub Gist'dan yuklash
     if (persistentStorage.isConfigured()) {
       const gistData = await persistentStorage.loadFromGist()
       if (gistData) {
         this.cache = gistData
         this.cacheTime = now
         
-        // localStorage'ga ham saqlash
         try {
           localStorage.setItem('bukhari_global_db', JSON.stringify(gistData))
-        } catch (e) {
-          console.warn('localStorage saqlashda xato:', e)
-        }
+        } catch (e) {}
         
         return gistData
       }
     }
 
     // 3. Fallback - localStorage
-    console.log('⚠️ GitHub Gist ham ishlamadi, localStorage\'dan yuklash...')
     return this.getFallbackData()
   }
 
@@ -129,15 +109,9 @@ class GlobalDatabaseService {
     const stored = localStorage.getItem('bukhari_global_db')
     if (stored) {
       try {
-        const data = JSON.parse(stored)
-        console.log('💾 localStorage dan yuklandi:', {
-          profiles: data.profiles?.length || 0,
-          groups: data.groups?.length || 0,
-          grades: data.grades?.length || 0
-        })
-        return data
+        return JSON.parse(stored)
       } catch (error) {
-        console.error('localStorage parse error:', error)
+        console.error('localStorage parse xatosi:', error)
       }
     }
     
@@ -178,7 +152,6 @@ class GlobalDatabaseService {
     // localStorage'ga saqlash
     try {
       localStorage.setItem('bukhari_global_db', JSON.stringify(defaultData))
-      console.log('🔄 Default ma\'lumotlar yaratildi va saqlandi')
     } catch (error) {
       console.error('localStorage saqlash xatosi:', error)
     }
@@ -193,8 +166,6 @@ class GlobalDatabaseService {
     // Retry mexanizmi bilan saqlash
     for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
       try {
-        console.log(`💾 API'ga saqlash urinishi ${attempt}/${this.MAX_RETRIES}`)
-        
         const response = await fetch(this.API_URL, {
           method: 'POST',
           headers: {
@@ -205,93 +176,66 @@ class GlobalDatabaseService {
         })
 
         if (response.ok) {
-          const result = await response.json()
-          console.log('✅ API Server: BARCHA TELEFONLARGA YUBORILDI!', {
-            profiles: result.profiles_count,
-            groups: result.groups_count,
-            grades: result.grades_count,
-            news: result.news_count,
-            version: result.version,
-            dataSize: result.dataSize
-          })
-          
           // localStorage'ga ham saqlash
           try {
             localStorage.setItem('bukhari_global_db', JSON.stringify(data))
             localStorage.setItem('bukhari_last_sync', Date.now().toString())
-          } catch (e) {
-            console.warn('localStorage saqlashda xato:', e)
-          }
+          } catch (e) {}
           
           // GitHub Gist'ga ham saqlash (DOIMIY SAQLASH)
           if (persistentStorage.isConfigured()) {
-            persistentStorage.saveToGist(data).then(success => {
-              if (success) {
-                console.log('✅ GitHub Gist: BUTUN UMRGA SAQLANDI!')
-              }
-            }).catch(err => 
-              console.warn('GitHub Gist saqlashda xato:', err)
-            )
+            persistentStorage.saveToGist(data).catch(() => {})
           }
           
           // Boshqa tab'larga signal
           this.broadcastUpdate()
           return
         } else if (response.status === 403) {
-          console.error('❌ API Server: Ruxsat yo\'q (403)')
-          break // Retry qilmaslik
-        } else {
-          console.error(`❌ API Server saqlash xatosi: ${response.status}`)
+          console.error('❌ API: Ruxsat yo\'q')
+          break
         }
       } catch (error) {
-        console.error(`❌ API Server saqlash xatosi (urinish ${attempt}):`, error)
+        if (attempt === this.MAX_RETRIES) {
+          console.error('❌ API saqlash xatosi:', error)
+        }
       }
       
       // Keyingi urinishdan oldin kutish
       if (attempt < this.MAX_RETRIES) {
-        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000)
-        console.log(`⏳ ${delay}ms kutilmoqda...`)
-        await new Promise(resolve => setTimeout(resolve, delay))
+        await new Promise(resolve => setTimeout(resolve, Math.min(1000 * Math.pow(2, attempt - 1), 5000)))
       }
     }
 
     // Fallback - localStorage va GitHub Gist
-    console.log('⚠️ API ishlamadi, localStorage va GitHub Gist\'ga saqlash...')
     try {
       localStorage.setItem('bukhari_global_db', JSON.stringify(data))
       localStorage.setItem('bukhari_last_sync', Date.now().toString())
       this.broadcastUpdate()
-      console.log('💾 localStorage\'ga saqlandi -', data.profiles.length, 'foydalanuvchi')
       
       // GitHub Gist'ga ham saqlash
       if (persistentStorage.isConfigured()) {
         await persistentStorage.saveToGist(data)
-        console.log('✅ GitHub Gist: BUTUN UMRGA SAQLANDI!')
       }
     } catch (error) {
-      console.error('❌ localStorage saqlashda xato:', error)
+      console.error('❌ localStorage saqlash xatosi:', error)
     }
   }
 
   private broadcastUpdate(): void {
     try {
-      // BroadcastChannel orqali boshqa tab'larga signal
       const channel = new BroadcastChannel('bukhari_updates')
       channel.postMessage({
         type: 'data_update',
         timestamp: Date.now()
       })
       
-      // StorageEvent orqali ham signal
       window.dispatchEvent(new StorageEvent('storage', {
         key: 'bukhari_last_sync',
         newValue: Date.now().toString(),
         storageArea: localStorage
       }))
-      
-      console.log('📡 Yangilanish signali yuborildi')
     } catch (error) {
-      console.error('Broadcast xatosi:', error)
+      // Silent fail
     }
   }
 
@@ -301,24 +245,20 @@ class GlobalDatabaseService {
     const profile = db.profiles.find(p => p.email === email)
     
     if (!profile) {
-      console.log('❌ Profil topilmadi:', email)
       return null
     }
     
     const storedPassword = db.passwords[profile.id] || 'student123'
     if (password !== storedPassword) {
-      console.log('❌ Parol noto\'g\'ri:', email, 'kutilgan:', storedPassword, 'kiritilgan:', password)
       return null
     }
     
-    console.log('✅ Login muvaffaqiyatli:', profile.email, profile.role)
     return profile
   }
 
   // Get functions
   async getProfiles(): Promise<Profile[]> {
     const db = await this.loadDatabase()
-    console.log('👥 Profillar soni:', db.profiles.length)
     return db.profiles
   }
 
@@ -371,7 +311,6 @@ class GlobalDatabaseService {
     db.profiles.push(newProfile)
     db.passwords[id] = password
     
-    console.log('➕ Yangi profil yaratildi:', newProfile.email, newProfile.role)
     await this.saveToLocal(db)
     return newProfile
   }
@@ -479,7 +418,6 @@ class GlobalDatabaseService {
   async forceRefresh(): Promise<void> {
     this.cache = null
     this.cacheTime = 0
-    console.log('🔄 Cache tozalandi')
   }
 
   // Export/Import functions (Ma'lumot ulashish sahifasi uchun)
@@ -493,7 +431,6 @@ class GlobalDatabaseService {
       const data = JSON.parse(jsonData)
       if (data && data.profiles && Array.isArray(data.profiles)) {
         await this.saveToLocal(data)
-        console.log('📥 Ma\'lumotlar import qilindi')
         return true
       }
     } catch (error) {
@@ -509,24 +446,20 @@ class GlobalDatabaseService {
       try {
         const channel = new BroadcastChannel('bukhari_updates')
         channel.onmessage = () => {
-          console.log('📨 Broadcast yangilanish qabul qilindi')
           this.cache = null
           this.cacheTime = 0
         }
       } catch (error) {
-        console.error('BroadcastChannel xatosi:', error)
+        // Silent fail
       }
 
       // Storage listener
       window.addEventListener('storage', (e) => {
         if (e.key === 'bukhari_last_sync') {
-          console.log('📨 Storage yangilanish qabul qilindi')
           this.cache = null
           this.cacheTime = 0
         }
       })
-
-      console.log('📡 Listeners o\'rnatildi')
     }
   }
 
@@ -535,15 +468,13 @@ class GlobalDatabaseService {
     setInterval(async () => {
       const now = Date.now()
       if (this.cache && (now - this.cacheTime) > 5000) {
-        console.log('🔄 Avtomatik yangilanish...')
         try {
           await this.loadDatabase()
         } catch (error) {
-          console.error('Avtomatik yangilanish xatosi:', error)
+          // Silent fail
         }
       }
     }, 5000)
-    console.log('⏰ Avtomatik yangilanish boshlandi (har 5 soniyada)')
   }
   
   // Ma'lumotlar statistikasi

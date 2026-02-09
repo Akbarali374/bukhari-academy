@@ -173,7 +173,6 @@ ${emailConfig.fromEmail}`
       })
 
       if (response.ok) {
-        console.log('✅ Email yuborildi:', studentEmail)
         return true
       } else {
         console.error('❌ Email yuborishda xato:', response.status)
