@@ -64,10 +64,9 @@ class GlobalDatabaseService {
             }
             
             // GitHub Gist'ga ham saqlash (agar sozlangan bo'lsa)
-            // VAQTINCHALIK O'CHIRILGAN - 404 xatolarni oldini olish uchun
-            // if (persistentStorage.isConfigured()) {
-            //   persistentStorage.saveToGist(data).catch(() => {})
-            // }
+            if (persistentStorage.isConfigured()) {
+              persistentStorage.saveToGist(data).catch(() => {})
+            }
             
             return data
           }
@@ -184,10 +183,9 @@ class GlobalDatabaseService {
           } catch (e) {}
           
           // GitHub Gist'ga ham saqlash (DOIMIY SAQLASH)
-          // VAQTINCHALIK O'CHIRILGAN - 404 xatolarni oldini olish uchun
-          // if (persistentStorage.isConfigured()) {
-          //   persistentStorage.saveToGist(data).catch(() => {})
-          // }
+          if (persistentStorage.isConfigured()) {
+            persistentStorage.saveToGist(data).catch(() => {})
+          }
           
           // Boshqa tab'larga signal
           this.broadcastUpdate()
@@ -215,10 +213,9 @@ class GlobalDatabaseService {
       this.broadcastUpdate()
       
       // GitHub Gist'ga ham saqlash
-      // VAQTINCHALIK O'CHIRILGAN - 404 xatolarni oldini olish uchun
-      // if (persistentStorage.isConfigured()) {
-      //   await persistentStorage.saveToGist(data)
-      // }
+      if (persistentStorage.isConfigured()) {
+        await persistentStorage.saveToGist(data)
+      }
     } catch (error) {
       console.error('❌ localStorage saqlash xatosi:', error)
     }
