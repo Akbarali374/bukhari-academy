@@ -70,8 +70,10 @@ export default function AdminCreateLogin() {
       <div className="max-w-md bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Guruh</label>
+            <label htmlFor="group-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Guruh</label>
             <select
+              id="group-select"
+              name="groupId"
               value={groupId}
               onChange={(e) => setGroupId(e.target.value)}
               className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -84,8 +86,10 @@ export default function AdminCreateLogin() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Familiya</label>
+            <label htmlFor="last-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Familiya</label>
             <input
+              id="last-name"
+              name="lastName"
               type="text"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
@@ -94,8 +98,10 @@ export default function AdminCreateLogin() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ism</label>
+            <label htmlFor="first-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ism</label>
             <input
+              id="first-name"
+              name="firstName"
               type="text"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
@@ -104,8 +110,10 @@ export default function AdminCreateLogin() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email (Gmail — login)</label>
+            <label htmlFor="email-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email (Gmail — login)</label>
             <input
+              id="email-input"
+              name="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -115,8 +123,10 @@ export default function AdminCreateLogin() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Parol</label>
+            <label htmlFor="password-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Parol</label>
             <input
+              id="password-input"
+              name="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
