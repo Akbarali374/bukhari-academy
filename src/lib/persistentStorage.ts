@@ -35,6 +35,41 @@ class PersistentStorage {
   setConfig(gistId: string, githubToken: string) {
     this.config = { gistId, githubToken }
     this.saveConfig()
+    
+    // API'ga ham saqlash
+    this.syncConfigToAPI()
+  }
+
+  loadConfigFromData(config: PersistentConfig) {
+    this.config = config
+    this.saveConfig()
+  }
+
+  private async syncConfigToAPI() {
+    try {
+      // Global database'ga qo'shish
+      const stored = localStorage.getItem('bukhari_global_db')
+      if (stored) {
+        const db = JSON.parse(stored)
+        db.persistentConfig = this.config
+        localStorage.setItem('bukhari_global_db', JSON.stringify(db))
+        
+        // API'ga yuborish
+        const API_URL = '/api/database'
+        const API_KEY = 'bukhari_academy_secret_2024_sanobarhon'
+        
+        await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': API_KEY
+          },
+          body: JSON.stringify(db)
+        })
+      }
+    } catch (error) {
+      console.error('Config sync xatosi:', error)
+    }
   }
 
   async saveToGist(data: any): Promise<boolean> {

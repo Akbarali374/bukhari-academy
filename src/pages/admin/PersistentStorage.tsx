@@ -83,10 +83,12 @@ export default function AdminPersistentStorage() {
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="gist-id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Gist ID
             </label>
             <input
+              id="gist-id"
+              name="gistId"
               type="text"
               value={gistId}
               onChange={(e) => setGistId(e.target.value)}
@@ -99,10 +101,12 @@ export default function AdminPersistentStorage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="github-token" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               GitHub Token
             </label>
             <input
+              id="github-token"
+              name="githubToken"
               type="password"
               value={githubToken}
               onChange={(e) => setGithubToken(e.target.value)}

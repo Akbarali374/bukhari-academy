@@ -14,6 +14,10 @@ interface GlobalDatabase {
   testAttempts: TestAttempt[]
   testResults: TestResult[]
   passwords: Record<string, string>
+  persistentConfig?: {
+    gistId?: string
+    githubToken?: string
+  }
 }
 
 class GlobalDatabaseService {
@@ -28,7 +32,6 @@ class GlobalDatabaseService {
   private readonly API_KEY = 'bukhari_academy_secret_2024_sanobarhon'
   
   // Retry mexanizmi
-  private retryCount = 0
   private readonly MAX_RETRIES = 3
 
   async loadDatabase(): Promise<GlobalDatabase> {
@@ -57,7 +60,6 @@ class GlobalDatabaseService {
           if (data && data.profiles && Array.isArray(data.profiles)) {
             this.cache = data
             this.cacheTime = now
-            this.retryCount = 0
             
             // localStorage'ga backup saqlash
             try {
@@ -67,11 +69,15 @@ class GlobalDatabaseService {
               // Silent fail
             }
             
+            // GitHub Gist config'ni yuklash (agar API'da bo'lsa)
+            if (data.persistentConfig && data.persistentConfig.gistId && data.persistentConfig.githubToken) {
+              persistentStorage.loadConfigFromData(data.persistentConfig)
+            }
+            
             // GitHub Gist'ga ham saqlash (agar sozlangan bo'lsa)
-            // VAQTINCHALIK O'CHIRILGAN - 404 xatolarni oldini olish uchun
-            // if (persistentStorage.isConfigured()) {
-            //   persistentStorage.saveToGist(data).catch(() => {})
-            // }
+            if (persistentStorage.isConfigured()) {
+              persistentStorage.saveToGist(data).catch(() => {})
+            }
             
             return data
           }
@@ -149,6 +155,10 @@ class GlobalDatabaseService {
       homework: [],
       comments: [],
       attendance: [],
+      payments: [],
+      testQuestions: [],
+      testAttempts: [],
+      testResults: [],
       passwords: {
         'admin-1': 'admin.sanobarhon.2003'
       }
@@ -188,10 +198,9 @@ class GlobalDatabaseService {
           } catch (e) {}
           
           // GitHub Gist'ga ham saqlash (DOIMIY SAQLASH)
-          // VAQTINCHALIK O'CHIRILGAN - 404 xatolarni oldini olish uchun
-          // if (persistentStorage.isConfigured()) {
-          //   persistentStorage.saveToGist(data).catch(() => {})
-          // }
+          if (persistentStorage.isConfigured()) {
+            persistentStorage.saveToGist(data).catch(() => {})
+          }
           
           // Boshqa tab'larga signal
           this.broadcastUpdate()
@@ -219,10 +228,9 @@ class GlobalDatabaseService {
       this.broadcastUpdate()
       
       // GitHub Gist'ga ham saqlash
-      // VAQTINCHALIK O'CHIRILGAN - 404 xatolarni oldini olish uchun
-      // if (persistentStorage.isConfigured()) {
-      //   await persistentStorage.saveToGist(data)
-      // }
+      if (persistentStorage.isConfigured()) {
+        await persistentStorage.saveToGist(data)
+      }
     } catch (error) {
       console.error('❌ localStorage saqlash xatosi:', error)
     }
