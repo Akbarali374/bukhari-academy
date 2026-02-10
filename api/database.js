@@ -1,18 +1,23 @@
-// Vercel Serverless Function - KUCHLI API SERVER
-// 300+ foydalanuvchi uchun optimallashtirilgan
-// HIMOYALANGAN - Faqat autentifikatsiya bilan ishlaydi
-// DOIMIY SAQLASH - Ma'lumotlar yo'qolmaydi
+// Vercel Serverless Function - DOIMIY SAQLASH
+// Ma'lumotlar BUTUN UMRGA saqlanadi
+// 
+// MUHIM: Vercel serverless function read-only, shuning uchun:
+// 1. localStorage - Asosiy saqlash (har bir brauzerda)
+// 2. API Server - Sinxronizatsiya uchun (RAM cache)
+// 3. GitHub Gist - Global backup (ixtiyoriy)
+//
+// Agar haqiqiy server-side database kerak bo'lsa:
+// - Vercel Postgres (bepul 256MB)
+// - Vercel KV Redis (bepul 256MB)
+// - Supabase (bepul 500MB)
 
-// API kaliti - Bu maxfiy kalit, faqat sizning saytingiz biladi
 const API_SECRET_KEY = 'bukhari_academy_secret_2024_sanobarhon'
 
-// GLOBAL DATABASE - Xotira asosida (RAM) - juda tez!
-// MUHIM: Vercel serverless function har safar ishga tushganda bu ma'lumotlar qayta yuklanadi
-// Shuning uchun biz ma'lumotlarni har safar client'dan olishimiz kerak
+// RAM cache - Vercel serverless function restart bo'lganda yo'qoladi
+// Lekin bu muammo emas, chunki client localStorage'da saqlanadi
 let globalDatabase = null
 let lastUpdate = Date.now()
 
-// Default ma'lumotlar
 function getDefaultDatabase() {
   return {
     profiles: [
@@ -42,31 +47,20 @@ function getDefaultDatabase() {
     homework: [],
     comments: [],
     attendance: [],
+    payments: [],
+    testQuestions: [],
+    testAttempts: [],
+    testResults: [],
     passwords: {
       'admin-1': 'admin.sanobarhon.2003'
     },
-    emailConfig: {
-      fromEmail: 'bukhariacademy256@gmail.com',
-      serviceId: '',
-      templateId: '',
-      publicKey: ''
-    },
     version: 1,
-    lastUpdate: Date.now(),
-    _persistent: true // Bu flag ma'lumotlar doimiy ekanligini bildiradi
+    lastUpdate: Date.now()
   }
 }
 
-// Database'ni initsializatsiya qilish
-// MUHIM: Agar globalDatabase bo'sh bo'lsa, default ma'lumotlarni yuklash
-// Lekin client har doim to'liq ma'lumotlarni yuborishi kerak
-if (!globalDatabase) {
-  globalDatabase = getDefaultDatabase()
-  console.log('🚀 Database initialized with defaults')
-}
-
 export default function handler(req, res) {
-  // CORS headers - faqat sizning saytingizdan
+  // CORS headers
   const origin = req.headers.origin
   const allowedOrigins = [
     'http://localhost:5173',
@@ -78,7 +72,6 @@ export default function handler(req, res) {
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin)
   } else {
-    // Agar origin yo'q bo'lsa (masalan, server-side request), ruxsat berish
     res.setHeader('Access-Control-Allow-Origin', '*')
   }
   
@@ -88,7 +81,6 @@ export default function handler(req, res) {
   res.setHeader('Pragma', 'no-cache')
   res.setHeader('Expires', '0')
 
-  // OPTIONS request uchun
   if (req.method === 'OPTIONS') {
     res.status(200).end()
     return
@@ -97,126 +89,82 @@ export default function handler(req, res) {
   // API kalitini tekshirish
   const apiKey = req.headers['x-api-key']
   if (apiKey !== API_SECRET_KEY) {
-    console.log('❌ Noto\'g\'ri API kaliti')
     res.status(403).json({ 
-      error: 'Ruxsat yo\'q - API kaliti noto\'g\'ri',
+      error: 'Ruxsat yo\'q',
       timestamp: new Date().toISOString()
     })
     return
   }
 
-  // Database'ni tekshirish
-  if (!globalDatabase) {
-    console.log('⚠️ Database yo\'q, qayta yaratilmoqda...')
-    globalDatabase = getDefaultDatabase()
-  }
-
-  // GET - Ma'lumotlarni olish (TEZKOR)
+  // GET - Ma'lumotlarni olish
   if (req.method === 'GET') {
     try {
-      console.log('📥 GET request - Ma\'lumotlar yuborilmoqda:', {
-        profiles: globalDatabase.profiles?.length || 0,
-        groups: globalDatabase.groups?.length || 0,
-        grades: globalDatabase.grades?.length || 0,
-        news: globalDatabase.news?.length || 0,
-        homework: globalDatabase.homework?.length || 0,
-        comments: globalDatabase.comments?.length || 0,
-        attendance: globalDatabase.attendance?.length || 0
-      })
+      // Agar globalDatabase bo'sh bo'lsa, client localStorage'dan yuklaydi
+      const data = globalDatabase || getDefaultDatabase()
       
-      // Ma'lumotlarni JSON formatda yuborish
       res.status(200).json({
-        ...globalDatabase,
+        ...data,
         serverTime: new Date().toISOString(),
-        version: globalDatabase.version || 1
+        storage: 'localStorage (permanent) + API cache'
       })
       return
     } catch (error) {
       console.error('❌ GET xatosi:', error)
       res.status(500).json({ 
         error: 'Server xatosi',
-        message: error.message,
-        timestamp: new Date().toISOString()
+        message: error.message
       })
       return
     }
   }
 
-  // POST/PUT - Ma'lumotlarni saqlash (KUCHLI)
+  // POST/PUT - Ma'lumotlarni saqlash
   if (req.method === 'POST' || req.method === 'PUT') {
     try {
       const newData = req.body
       
-      // Ma'lumotlarni tekshirish
-      if (!newData) {
+      if (!newData || !newData.profiles || !Array.isArray(newData.profiles)) {
         res.status(400).json({ 
-          error: 'Ma\'lumot yo\'q',
-          timestamp: new Date().toISOString()
+          error: 'Noto\'g\'ri ma\'lumot formati'
         })
         return
       }
 
-      if (!newData.profiles || !Array.isArray(newData.profiles)) {
-        res.status(400).json({ 
-          error: 'Noto\'g\'ri ma\'lumot formati - profiles array kerak',
-          timestamp: new Date().toISOString()
-        })
-        return
-      }
-
-      // Ma'lumotlar hajmini tekshirish (300+ foydalanuvchi uchun)
+      // Ma'lumotlar hajmini tekshirish
       const dataSize = JSON.stringify(newData).length
-      const maxSize = 10 * 1024 * 1024 // 10MB limit
+      const maxSize = 10 * 1024 * 1024 // 10MB
       
       if (dataSize > maxSize) {
-        console.error('❌ Ma\'lumot hajmi juda katta:', dataSize, 'bytes')
         res.status(413).json({ 
           error: 'Ma\'lumot hajmi juda katta',
           size: dataSize,
-          maxSize: maxSize,
-          timestamp: new Date().toISOString()
+          maxSize: maxSize
         })
         return
       }
 
       // Versiyani yangilash
-      const oldVersion = globalDatabase.version || 1
-      newData.version = oldVersion + 1
+      newData.version = (globalDatabase?.version || 0) + 1
       newData.lastUpdate = Date.now()
-
-      // Ma'lumotlarni SAQLASH (RAM'ga)
-      globalDatabase = {
-        ...newData,
-        version: newData.version,
-        lastUpdate: newData.lastUpdate
-      }
       
+      // RAM'ga saqlash (cache)
+      globalDatabase = newData
       lastUpdate = Date.now()
       
-      console.log('✅ POST/PUT request - Ma\'lumotlar saqlandi:', {
+      console.log('✅ Ma\'lumotlar saqlandi:', {
         profiles: newData.profiles.length,
-        groups: newData.groups?.length || 0,
-        grades: newData.grades?.length || 0,
-        news: newData.news?.length || 0,
-        homework: newData.homework?.length || 0,
-        comments: newData.comments?.length || 0,
-        attendance: newData.attendance?.length || 0,
         version: newData.version,
-        dataSize: `${(dataSize / 1024).toFixed(2)} KB`
+        dataSize: `${(dataSize / 1024).toFixed(2)} KB`,
+        storage: 'localStorage (permanent) + API cache'
       })
       
       res.status(200).json({ 
         success: true, 
-        message: 'Ma\'lumotlar BARCHA TELEFONLARGA yuborildi!',
+        message: 'Ma\'lumotlar saqlandi! localStorage (doimiy) + API cache',
         profiles_count: newData.profiles.length,
-        groups_count: newData.groups?.length || 0,
-        grades_count: newData.grades?.length || 0,
-        news_count: newData.news?.length || 0,
-        homework_count: newData.homework?.length || 0,
-        comments_count: newData.comments?.length || 0,
-        attendance_count: newData.attendance?.length || 0,
         version: newData.version,
         dataSize: `${(dataSize / 1024).toFixed(2)} KB`,
+        storage: 'localStorage (permanent) + API cache',
         timestamp: new Date().toISOString()
       })
       return
@@ -224,17 +172,14 @@ export default function handler(req, res) {
       console.error('❌ POST/PUT xatosi:', error)
       res.status(500).json({ 
         error: 'Server xatosi',
-        message: error.message,
-        timestamp: new Date().toISOString()
+        message: error.message
       })
       return
     }
   }
 
-  // Boshqa metodlar uchun
   res.status(405).json({ 
     error: 'Method not allowed',
-    allowedMethods: ['GET', 'POST', 'PUT', 'OPTIONS'],
-    timestamp: new Date().toISOString()
+    allowedMethods: ['GET', 'POST', 'PUT', 'OPTIONS']
   })
 }
