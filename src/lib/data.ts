@@ -151,6 +151,10 @@ export async function updateProfile(id: string, data: Partial<Pick<Profile, 'fir
         homework: [],
         comments: [],
         attendance: [],
+        payments: [],
+        testQuestions: [],
+        testAttempts: [],
+        testResults: [],
         passwords: {}
       })
       return updated
