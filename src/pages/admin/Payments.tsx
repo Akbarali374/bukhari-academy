@@ -14,6 +14,22 @@ export default function AdminPayments() {
   const [paymentAmount, setPaymentAmount] = useState(500000)
   const [paidAmount, setPaidAmount] = useState(0)
   const [paymentNote, setPaymentNote] = useState('')
+  
+  // Oyning 15-kunigacha to'lash kerakligini tekshirish
+  const isPaymentDeadlineNear = () => {
+    const today = new Date()
+    const dayOfMonth = today.getDate()
+    return dayOfMonth >= 1 && dayOfMonth <= 15
+  }
+  
+  const daysUntilDeadline = () => {
+    const today = new Date()
+    const dayOfMonth = today.getDate()
+    if (dayOfMonth <= 15) {
+      return 15 - dayOfMonth
+    }
+    return 0
+  }
 
   useEffect(() => {
     loadData()
@@ -210,6 +226,32 @@ Bukhari Academy`
         </div>
       ) : (
         <div className="space-y-6">
+          {/* To'lov muddati eslatmasi */}
+          {isPaymentDeadlineNear() && (
+            <div className="bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-400 dark:border-amber-600 rounded-xl p-6">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-6 h-6 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-amber-900 dark:text-amber-100 mb-2">
+                    ⏰ To'lov muddati eslatmasi
+                  </h3>
+                  <p className="text-amber-800 dark:text-amber-200 mb-3">
+                    Oylik to'lovlarni har oyning <span className="font-bold text-xl">15-kunigacha</span> to'lashingizni so'raymiz!
+                  </p>
+                  {daysUntilDeadline() > 0 ? (
+                    <p className="text-sm text-amber-700 dark:text-amber-300 font-medium">
+                      📅 Muddat tugashiga <span className="font-bold text-lg">{daysUntilDeadline()}</span> kun qoldi
+                    </p>
+                  ) : (
+                    <p className="text-sm text-red-700 dark:text-red-300 font-bold">
+                      ⚠️ Bugun to'lov muddatining oxirgi kuni!
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          
           {/* Oy tanlash */}
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center justify-between mb-4">
