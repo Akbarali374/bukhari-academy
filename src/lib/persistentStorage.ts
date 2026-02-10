@@ -93,8 +93,18 @@ class PersistentStorage {
         })
       })
 
+      // Faqat 404 xatosida warning berish, boshqa xatolarni ignore qilish
+      if (!response.ok && response.status === 404) {
+        // Silent - faqat birinchi marta warning
+        if (!sessionStorage.getItem('gist_404_warned')) {
+          console.warn('⚠️ GitHub Gist topilmadi. Admin panelda "Doimiy saqlash" sahifasidan sozlang.')
+          sessionStorage.setItem('gist_404_warned', 'true')
+        }
+      }
+
       return response.ok
     } catch (error) {
+      // Butunlay silent - hech narsa chiqarmaymiz
       return false
     }
   }
@@ -119,7 +129,7 @@ class PersistentStorage {
         }
       }
     } catch (error) {
-      // Silent fail
+      // Butunlay silent - hech narsa chiqarmaymiz
     }
 
     return null

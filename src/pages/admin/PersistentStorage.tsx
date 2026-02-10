@@ -19,7 +19,8 @@ export default function AdminPersistentStorage() {
         if (stored) {
           const config = JSON.parse(stored)
           if (config.gistId) setGistId(config.gistId)
-          if (config.githubToken) setGithubToken(config.githubToken)
+          // Token'ni xavfsizlik uchun ko'rsatmaymiz, faqat yulduzcha
+          if (config.githubToken) setGithubToken('••••••••••••••••')
         }
       } catch (error) {
         console.error('Config yuklashda xato:', error)
