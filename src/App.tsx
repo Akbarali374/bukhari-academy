@@ -25,6 +25,7 @@ import TeacherHomework from '@/pages/teacher/Homework'
 import StudentProfile from '@/pages/student/Profile'
 import StudentGrades from '@/pages/student/Grades'
 import StudentTests from '@/pages/student/Tests'
+import StudentAttendance from '@/pages/student/Attendance'
 import AdminNews from '@/pages/admin/News'
 import AdminDataSync from '@/pages/admin/DataSync'
 import AdminPersistentStorage from '@/pages/admin/PersistentStorage'
@@ -118,6 +119,7 @@ export default function App() {
         <Route path="tests" element={<StudentTests />} />
         <Route path="homework" element={<StudentHomework />} />
         <Route path="news" element={<StudentNews />} />
+        <Route path="attendance" element={<StudentAttendance />} />
       </Route>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="*" element={<Navigate to="/login" replace />} />

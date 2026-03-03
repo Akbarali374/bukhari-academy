@@ -1,22 +1,11 @@
 // Vercel Serverless Function - DOIMIY SAQLASH
-// Ma'lumotlar BUTUN UMRGA saqlanadi
-// 
-// MUHIM: Vercel serverless function read-only, shuning uchun:
-// 1. localStorage - Asosiy saqlash (har bir brauzerda)
-// 2. API Server - Sinxronizatsiya uchun (RAM cache)
-// 3. GitHub Gist - Global backup (ixtiyoriy)
-//
-// Agar haqiqiy server-side database kerak bo'lsa:
-// - Vercel Postgres (bepul 256MB)
-// - Vercel KV Redis (bepul 256MB)
-// - Supabase (bepul 500MB)
+// Ma'lumotlar BUTUN UMRGA saqlanadi - Vercel KV (Redis)
+// BEPUL: 256MB, 100,000 keys, < 1ms latency
+
+import { kv } from '@vercel/kv'
 
 const API_SECRET_KEY = 'bukhari_academy_secret_2024_sanobarhon'
-
-// RAM cache - Vercel serverless function restart bo'lganda yo'qoladi
-// Lekin bu muammo emas, chunki client localStorage'da saqlanadi
-let globalDatabase = null
-let lastUpdate = Date.now()
+const DB_KEY = 'bukhari_academy_database'
 
 function getDefaultDatabase() {
   return {
@@ -59,7 +48,7 @@ function getDefaultDatabase() {
   }
 }
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   // CORS headers
   const origin = req.headers.origin
   const allowedOrigins = [
@@ -78,8 +67,6 @@ export default function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-API-Key')
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
-  res.setHeader('Pragma', 'no-cache')
-  res.setHeader('Expires', '0')
 
   if (req.method === 'OPTIONS') {
     res.status(200).end()
@@ -89,30 +76,45 @@ export default function handler(req, res) {
   // API kalitini tekshirish
   const apiKey = req.headers['x-api-key']
   if (apiKey !== API_SECRET_KEY) {
-    res.status(403).json({ 
-      error: 'Ruxsat yo\'q',
-      timestamp: new Date().toISOString()
-    })
+    res.status(403).json({ error: 'Ruxsat yo\'q' })
     return
   }
 
   // GET - Ma'lumotlarni olish
   if (req.method === 'GET') {
     try {
-      // Agar globalDatabase bo'sh bo'lsa, client localStorage'dan yuklaydi
-      const data = globalDatabase || getDefaultDatabase()
+      // Vercel KV'dan o'qish (DOIMIY SAQLASH)
+      let data = await kv.get(DB_KEY)
+      
+      // Agar KV'da yo'q bo'lsa, default ma'lumotlarni saqlash
+      if (!data) {
+        data = getDefaultDatabase()
+        await kv.set(DB_KEY, data)
+        console.log('✅ Default ma\'lumotlar KV\'ga saqlandi')
+      }
+      
+      console.log('📥 GET - KV\'dan yuklandi:', {
+        profiles: data.profiles?.length || 0,
+        version: data.version || 1,
+        storage: 'Vercel KV (permanent)'
+      })
       
       res.status(200).json({
         ...data,
         serverTime: new Date().toISOString(),
-        storage: 'localStorage (permanent) + API cache'
+        storage: 'Vercel KV (permanent - butun umr)'
       })
       return
     } catch (error) {
       console.error('❌ GET xatosi:', error)
-      res.status(500).json({ 
-        error: 'Server xatosi',
-        message: error.message
+      
+      // Fallback - default ma'lumotlar
+      const defaultData = getDefaultDatabase()
+      res.status(200).json({
+        ...defaultData,
+        serverTime: new Date().toISOString(),
+        storage: 'fallback (KV unavailable)',
+        warning: 'Vercel KV sozlanmagan. Vercel Dashboard\'dan KV yarating.'
       })
       return
     }
@@ -124,9 +126,7 @@ export default function handler(req, res) {
       const newData = req.body
       
       if (!newData || !newData.profiles || !Array.isArray(newData.profiles)) {
-        res.status(400).json({ 
-          error: 'Noto\'g\'ri ma\'lumot formati'
-        })
+        res.status(400).json({ error: 'Noto\'g\'ri ma\'lumot formati' })
         return
       }
 
@@ -144,27 +144,27 @@ export default function handler(req, res) {
       }
 
       // Versiyani yangilash
-      newData.version = (globalDatabase?.version || 0) + 1
+      const currentData = await kv.get(DB_KEY)
+      newData.version = (currentData?.version || 0) + 1
       newData.lastUpdate = Date.now()
       
-      // RAM'ga saqlash (cache)
-      globalDatabase = newData
-      lastUpdate = Date.now()
+      // Vercel KV'ga saqlash (DOIMIY SAQLASH - BUTUN UMR)
+      await kv.set(DB_KEY, newData)
       
-      console.log('✅ Ma\'lumotlar saqlandi:', {
+      console.log('✅ POST/PUT - KV\'ga saqlandi (DOIMIY):', {
         profiles: newData.profiles.length,
         version: newData.version,
         dataSize: `${(dataSize / 1024).toFixed(2)} KB`,
-        storage: 'localStorage (permanent) + API cache'
+        storage: 'Vercel KV (permanent)'
       })
       
       res.status(200).json({ 
         success: true, 
-        message: 'Ma\'lumotlar saqlandi! localStorage (doimiy) + API cache',
+        message: 'Ma\'lumotlar BUTUN UMRGA saqlandi! (Vercel KV)',
         profiles_count: newData.profiles.length,
         version: newData.version,
         dataSize: `${(dataSize / 1024).toFixed(2)} KB`,
-        storage: 'localStorage (permanent) + API cache',
+        storage: 'Vercel KV (permanent - hech qachon yo\'qolmaydi)',
         timestamp: new Date().toISOString()
       })
       return
@@ -172,7 +172,8 @@ export default function handler(req, res) {
       console.error('❌ POST/PUT xatosi:', error)
       res.status(500).json({ 
         error: 'Server xatosi',
-        message: error.message
+        message: error.message,
+        hint: 'Vercel KV sozlanmagan bo\'lishi mumkin. Vercel Dashboard\'dan KV yarating.'
       })
       return
     }

@@ -211,7 +211,7 @@ export default function StudentLayout() {
           </div>
         )}
       </header>
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="max-w-4xl mx-auto px-4 py-6 pb-20 md:pb-6">
         {user && (
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
             {user.profile.last_name} {user.profile.first_name}
@@ -219,6 +219,86 @@ export default function StudentLayout() {
         )}
         <Outlet />
       </main>
+      
+      {/* Bottom Navigation - Mobile Only */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-dark-900 border-t border-gray-200 dark:border-dark-700 md:hidden">
+        <div className="flex items-center justify-around h-16 px-2">
+          <NavLink
+            to="/student/news"
+            className={({ isActive }) =>
+              `flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors relative ${
+                isActive
+                  ? 'text-green-600 dark:text-green-400'
+                  : 'text-gray-500 dark:text-gray-400'
+              }`
+            }
+          >
+            <Newspaper className="w-6 h-6" />
+            <span className="text-xs font-medium">Yangiliklar</span>
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1/4 flex items-center justify-center w-4 h-4 text-xs font-bold text-white bg-red-600 rounded-full">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </NavLink>
+          
+          <NavLink
+            to="/student/grades"
+            className={({ isActive }) =>
+              `flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${
+                isActive
+                  ? 'text-green-600 dark:text-green-400'
+                  : 'text-gray-500 dark:text-gray-400'
+              }`
+            }
+          >
+            <Award className="w-6 h-6" />
+            <span className="text-xs font-medium">Baholar</span>
+          </NavLink>
+          
+          <NavLink
+            to="/student/homework"
+            className={({ isActive }) =>
+              `flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${
+                isActive
+                  ? 'text-green-600 dark:text-green-400'
+                  : 'text-gray-500 dark:text-gray-400'
+              }`
+            }
+          >
+            <BookOpen className="w-6 h-6" />
+            <span className="text-xs font-medium">Vazifalar</span>
+          </NavLink>
+          
+          <NavLink
+            to="/student/tests"
+            className={({ isActive }) =>
+              `flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${
+                isActive
+                  ? 'text-green-600 dark:text-green-400'
+                  : 'text-gray-500 dark:text-gray-400'
+              }`
+            }
+          >
+            <FileText className="w-6 h-6" />
+            <span className="text-xs font-medium">Testlar</span>
+          </NavLink>
+          
+          <NavLink
+            to="/student/profile"
+            className={({ isActive }) =>
+              `flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors ${
+                isActive
+                  ? 'text-green-600 dark:text-green-400'
+                  : 'text-gray-500 dark:text-gray-400'
+              }`
+            }
+          >
+            <User className="w-6 h-6" />
+            <span className="text-xs font-medium">Profil</span>
+          </NavLink>
+        </div>
+      </nav>
     </div>
   )
 }
