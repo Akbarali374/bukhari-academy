@@ -1,11 +1,12 @@
-// Vercel Serverless Function - DOIMIY SAQLASH
-// Ma'lumotlar BUTUN UMRGA saqlanadi - Vercel KV (Redis)
-// BEPUL: 256MB, 100,000 keys, < 1ms latency
-
-import { kv } from '@vercel/kv'
+// Vercel Serverless Function - ODDIY VA ISHONCHLI
+// Ma'lumotlar localStorage'da saqlanadi (har bir brauzerda)
+// API faqat sinxronizatsiya uchun ishlatiladi
 
 const API_SECRET_KEY = 'bukhari_academy_secret_2024_sanobarhon'
-const DB_KEY = 'bukhari_academy_database'
+
+// RAM cache - tez ishlash uchun
+let globalDatabase = null
+let lastUpdate = Date.now()
 
 function getDefaultDatabase() {
   return {
@@ -48,13 +49,17 @@ function getDefaultDatabase() {
   }
 }
 
-export default async function handler(req, res) {
+export default function handler(req, res) {
   // CORS headers
   const origin = req.headers.origin
   const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:3000',
     'https://bukhari-academy.vercel.app',
+    'https://bukhari-academy-brtlj.vercel.app',
+    'https://bukhari-academy-5wgd9.vercel.app',
+    'https://bukhari-academy-cay2.vercel.app',
+    'https://bukhari-academy-8ob7.vercel.app',
     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null
   ].filter(Boolean)
 
@@ -83,38 +88,22 @@ export default async function handler(req, res) {
   // GET - Ma'lumotlarni olish
   if (req.method === 'GET') {
     try {
-      // Vercel KV'dan o'qish (DOIMIY SAQLASH)
-      let data = await kv.get(DB_KEY)
-      
-      // Agar KV'da yo'q bo'lsa, default ma'lumotlarni saqlash
-      if (!data) {
-        data = getDefaultDatabase()
-        await kv.set(DB_KEY, data)
-        console.log('✅ Default ma\'lumotlar KV\'ga saqlandi')
-      }
-      
-      console.log('📥 GET - KV\'dan yuklandi:', {
-        profiles: data.profiles?.length || 0,
-        version: data.version || 1,
-        storage: 'Vercel KV (permanent)'
-      })
+      const data = globalDatabase || getDefaultDatabase()
       
       res.status(200).json({
         ...data,
         serverTime: new Date().toISOString(),
-        storage: 'Vercel KV (permanent - butun umr)'
+        storage: 'localStorage (permanent)',
+        message: 'Ma\'lumotlar localStorage\'da saqlanadi'
       })
       return
     } catch (error) {
       console.error('❌ GET xatosi:', error)
-      
-      // Fallback - default ma'lumotlar
       const defaultData = getDefaultDatabase()
       res.status(200).json({
         ...defaultData,
         serverTime: new Date().toISOString(),
-        storage: 'fallback (KV unavailable)',
-        warning: 'Vercel KV sozlanmagan. Vercel Dashboard\'dan KV yarating.'
+        storage: 'default'
       })
       return
     }
@@ -144,27 +133,27 @@ export default async function handler(req, res) {
       }
 
       // Versiyani yangilash
-      const currentData = await kv.get(DB_KEY)
-      newData.version = (currentData?.version || 0) + 1
+      newData.version = (globalDatabase?.version || 0) + 1
       newData.lastUpdate = Date.now()
       
-      // Vercel KV'ga saqlash (DOIMIY SAQLASH - BUTUN UMR)
-      await kv.set(DB_KEY, newData)
+      // RAM'ga saqlash (sinxronizatsiya uchun)
+      globalDatabase = newData
+      lastUpdate = Date.now()
       
-      console.log('✅ POST/PUT - KV\'ga saqlandi (DOIMIY):', {
+      console.log('✅ Ma\'lumotlar saqlandi:', {
         profiles: newData.profiles.length,
         version: newData.version,
         dataSize: `${(dataSize / 1024).toFixed(2)} KB`,
-        storage: 'Vercel KV (permanent)'
+        storage: 'localStorage (permanent)'
       })
       
       res.status(200).json({ 
         success: true, 
-        message: 'Ma\'lumotlar BUTUN UMRGA saqlandi! (Vercel KV)',
+        message: 'Ma\'lumotlar saqlandi! (localStorage - doimiy)',
         profiles_count: newData.profiles.length,
         version: newData.version,
         dataSize: `${(dataSize / 1024).toFixed(2)} KB`,
-        storage: 'Vercel KV (permanent - hech qachon yo\'qolmaydi)',
+        storage: 'localStorage (permanent)',
         timestamp: new Date().toISOString()
       })
       return
@@ -172,8 +161,7 @@ export default async function handler(req, res) {
       console.error('❌ POST/PUT xatosi:', error)
       res.status(500).json({ 
         error: 'Server xatosi',
-        message: error.message,
-        hint: 'Vercel KV sozlanmagan bo\'lishi mumkin. Vercel Dashboard\'dan KV yarating.'
+        message: error.message
       })
       return
     }
