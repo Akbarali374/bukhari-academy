@@ -1,5 +1,4 @@
 import type { Profile, Group, Grade, News, Homework, Comment, Attendance, Payment, TestQuestion, TestAttempt, TestResult } from '@/types'
-import { persistentStorage } from './persistentStorage'
 
 interface GlobalDatabase {
   profiles: Profile[]
@@ -69,16 +68,6 @@ class GlobalDatabaseService {
               // Silent fail
             }
             
-            // GitHub Gist config'ni yuklash (agar API'da bo'lsa)
-            if (data.persistentConfig && data.persistentConfig.gistId && data.persistentConfig.githubToken) {
-              persistentStorage.loadConfigFromData(data.persistentConfig)
-            }
-            
-            // GitHub Gist'ga ham saqlash (agar sozlangan bo'lsa)
-            if (persistentStorage.isConfigured()) {
-              persistentStorage.saveToGist(data).catch(() => {})
-            }
-            
             return data
           }
         } else if (response.status === 403) {
@@ -97,22 +86,7 @@ class GlobalDatabaseService {
       }
     }
 
-    // 2. GitHub Gist'dan yuklash
-    if (persistentStorage.isConfigured()) {
-      const gistData = await persistentStorage.loadFromGist()
-      if (gistData) {
-        this.cache = gistData
-        this.cacheTime = now
-        
-        try {
-          localStorage.setItem('bukhari_global_db', JSON.stringify(gistData))
-        } catch (e) {}
-        
-        return gistData
-      }
-    }
-
-    // 3. Fallback - localStorage
+    // 2. Fallback - localStorage
     return this.getFallbackData()
   }
 
@@ -191,16 +165,11 @@ class GlobalDatabaseService {
         })
 
         if (response.ok) {
-          // localStorage'ga ham saqlash
+          // localStorage'ga backup saqlash
           try {
             localStorage.setItem('bukhari_global_db', JSON.stringify(data))
             localStorage.setItem('bukhari_last_sync', Date.now().toString())
           } catch (e) {}
-          
-          // GitHub Gist'ga ham saqlash (DOIMIY SAQLASH)
-          if (persistentStorage.isConfigured()) {
-            persistentStorage.saveToGist(data).catch(() => {})
-          }
           
           // Boshqa tab'larga signal
           this.broadcastUpdate()
@@ -221,16 +190,11 @@ class GlobalDatabaseService {
       }
     }
 
-    // Fallback - localStorage va GitHub Gist
+    // Fallback - localStorage
     try {
       localStorage.setItem('bukhari_global_db', JSON.stringify(data))
       localStorage.setItem('bukhari_last_sync', Date.now().toString())
       this.broadcastUpdate()
-      
-      // GitHub Gist'ga ham saqlash
-      if (persistentStorage.isConfigured()) {
-        await persistentStorage.saveToGist(data)
-      }
     } catch (error) {
       console.error('❌ localStorage saqlash xatosi:', error)
     }
