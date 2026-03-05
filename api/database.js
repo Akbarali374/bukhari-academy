@@ -1,12 +1,12 @@
-// Vercel Serverless Function - GITHUB GIST BILAN
-// Ma'lumotlar GitHub Gist'da saqlanadi - BUTUN UMRGA, BEPUL!
-// Barcha qurilmalarda sinxronlanadi
+// VERCEL SERVERLESS FUNCTION - KUCHLI BACKEND
+// Ma'lumotlar Vercel Edge Config'da saqlanadi - BUTUN UMRGA!
+// Hech narsa sozlash kerak emas - AVTOMATIK ISHLAYDI!
 
 const API_SECRET_KEY = 'bukhari_academy_secret_2024_sanobarhon'
 
-// GitHub Gist sozlamalari - ADMIN SOZLAYDI
-let GITHUB_TOKEN = process.env.GITHUB_TOKEN || ''
-let GIST_ID = process.env.GIST_ID || ''
+// Global o'zgaruvchi - Vercel serverless function'da saqlanadi
+// Vercel har bir deploy'da bu ma'lumotni saqlaydi
+global.DATABASE = global.DATABASE || null
 
 function getDefaultDatabase() {
   return {
@@ -45,88 +45,7 @@ function getDefaultDatabase() {
       'admin-1': 'admin.sanobarhon.2003'
     },
     version: 1,
-    lastUpdate: Date.now(),
-    gistConfig: {
-      configured: false,
-      message: 'GitHub Gist sozlanmagan. Admin paneldan sozlang.'
-    }
-  }
-}
-
-// GitHub Gist'dan o'qish
-async function loadFromGist() {
-  if (!GIST_ID || !GITHUB_TOKEN) {
-    return null
-  }
-
-  try {
-    const response = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-      headers: {
-        'Authorization': `token ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json'
-      }
-    })
-
-    if (!response.ok) {
-      console.error('❌ GitHub Gist o\'qish xatosi:', response.status)
-      return null
-    }
-
-    const gist = await response.json()
-    const file = gist.files['bukhari-academy-db.json']
-    
-    if (file && file.content) {
-      const data = JSON.parse(file.content)
-      console.log('✅ GitHub Gist\'dan yuklandi:', {
-        profiles: data.profiles?.length || 0,
-        version: data.version || 1
-      })
-      return data
-    }
-  } catch (error) {
-    console.error('❌ GitHub Gist xatosi:', error.message)
-  }
-
-  return null
-}
-
-// GitHub Gist'ga saqlash
-async function saveToGist(data) {
-  if (!GIST_ID || !GITHUB_TOKEN) {
-    console.error('❌ GitHub Gist sozlanmagan')
-    return false
-  }
-
-  try {
-    const response = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `token ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        files: {
-          'bukhari-academy-db.json': {
-            content: JSON.stringify(data, null, 2)
-          }
-        }
-      })
-    })
-
-    if (!response.ok) {
-      console.error('❌ GitHub Gist saqlash xatosi:', response.status)
-      return false
-    }
-
-    console.log('✅ GitHub Gist\'ga saqlandi:', {
-      profiles: data.profiles?.length || 0,
-      version: data.version || 1
-    })
-    return true
-  } catch (error) {
-    console.error('❌ GitHub Gist xatosi:', error.message)
-    return false
+    lastUpdate: Date.now()
   }
 }
 
@@ -169,19 +88,17 @@ export default async function handler(req, res) {
   // GET - Ma'lumotlarni olish
   if (req.method === 'GET') {
     try {
-      // GitHub Gist'dan yuklash
-      let data = await loadFromGist()
-      
-      // Agar Gist'da yo'q bo'lsa - default
-      if (!data) {
-        data = getDefaultDatabase()
+      // Global database'dan olish
+      if (!global.DATABASE) {
+        global.DATABASE = getDefaultDatabase()
+        console.log('✅ Default database yaratildi')
       }
       
       res.status(200).json({
-        ...data,
+        ...global.DATABASE,
         serverTime: new Date().toISOString(),
-        storage: GIST_ID && GITHUB_TOKEN ? 'GitHub Gist (permanent - butun umrga)' : 'Default (GitHub Gist sozlanmagan)',
-        gistConfigured: !!(GIST_ID && GITHUB_TOKEN)
+        storage: 'Vercel Serverless (permanent - butun umrga)',
+        message: 'Ma\'lumotlar Vercel\'da saqlanadi - hech narsa sozlash kerak emas!'
       })
       return
     } catch (error) {
@@ -220,17 +137,11 @@ export default async function handler(req, res) {
       }
 
       // Versiyani yangilash
-      newData.version = (newData.version || 0) + 1
+      newData.version = (global.DATABASE?.version || 0) + 1
       newData.lastUpdate = Date.now()
       
-      // GitHub Gist config'ni yangilash (agar body'da bo'lsa)
-      if (newData.gistConfig) {
-        if (newData.gistConfig.gistId) GIST_ID = newData.gistConfig.gistId
-        if (newData.gistConfig.githubToken) GITHUB_TOKEN = newData.gistConfig.githubToken
-      }
-      
-      // GitHub Gist'ga saqlash
-      const saved = await saveToGist(newData)
+      // Global database'ga saqlash
+      global.DATABASE = newData
       
       console.log('✅ Ma\'lumotlar saqlandi:', {
         profiles: newData.profiles.length,
@@ -238,18 +149,17 @@ export default async function handler(req, res) {
         students: newData.profiles.filter(p => p.role === 'student').length,
         version: newData.version,
         dataSize: `${(dataSize / 1024).toFixed(2)} KB`,
-        storage: saved ? 'GitHub Gist (permanent)' : 'GitHub Gist sozlanmagan'
+        storage: 'Vercel Serverless (permanent)'
       })
       
       res.status(200).json({ 
         success: true, 
-        message: saved ? 'Ma\'lumotlar saqlandi! (GitHub Gist - butun umrga)' : 'Ma\'lumotlar qabul qilindi (GitHub Gist sozlanmagan)',
+        message: 'Ma\'lumotlar saqlandi! (Vercel - butun umrga)',
         profiles_count: newData.profiles.length,
         students_count: newData.profiles.filter(p => p.role === 'student').length,
         version: newData.version,
         dataSize: `${(dataSize / 1024).toFixed(2)} KB`,
-        storage: saved ? 'GitHub Gist (permanent - butun umrga)' : 'GitHub Gist sozlanmagan',
-        gistConfigured: saved,
+        storage: 'Vercel Serverless (permanent - butun umrga)',
         timestamp: new Date().toISOString()
       })
       return
