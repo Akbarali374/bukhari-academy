@@ -43,6 +43,8 @@ const adminOthersNav = [
   { to: '/admin/persistent-storage', icon: RefreshCw, label: 'Doimiy saqlash' },
   { to: '/admin/data-sync', icon: RefreshCw, label: 'Ma\'lumot ulashish' },
   { to: '/admin/monthly-reports', icon: Mail, label: 'Oylik hisobotlar' },
+  // Chiqish faqat mobilda "Boshqalar"da
+  { to: 'logout', icon: LogOut, label: 'Chiqish', action: 'logout' },
 ]
 
 const teacherNav = [
@@ -150,23 +152,43 @@ export function Sidebar({ role }: { role: 'admin' | 'teacher' | 'student' }) {
                 
                 {isOthersOpen && (
                   <div className="mt-1 ml-4 space-y-1 border-l-2 border-gray-200 dark:border-gray-700 pl-2">
-                    {othersNav.map(({ to, icon: Icon, label }) => (
-                      <NavLink
-                        key={to}
-                        to={to}
-                        onClick={closeMobileMenu}
-                        className={({ isActive }) =>
-                          `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            isActive
-                              ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300'
-                              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                          }`
-                        }
-                      >
-                        <Icon className="w-4 h-4 shrink-0" />
-                        {label}
-                      </NavLink>
-                    ))}
+                    {othersNav.map(({ to, icon: Icon, label, action }) => {
+                      // Agar "Chiqish" bo'lsa - button qilish
+                      if (action === 'logout') {
+                        return (
+                          <button
+                            key={to}
+                            onClick={() => {
+                              logout()
+                              closeMobileMenu()
+                            }}
+                            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 md:hidden"
+                          >
+                            <Icon className="w-4 h-4 shrink-0" />
+                            {label}
+                          </button>
+                        )
+                      }
+                      
+                      // Oddiy link
+                      return (
+                        <NavLink
+                          key={to}
+                          to={to}
+                          onClick={closeMobileMenu}
+                          className={({ isActive }) =>
+                            `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                              isActive
+                                ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300'
+                                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            }`
+                          }
+                        >
+                          <Icon className="w-4 h-4 shrink-0" />
+                          {label}
+                        </NavLink>
+                      )
+                    })}
                   </div>
                 )}
               </div>
@@ -182,13 +204,14 @@ export function Sidebar({ role }: { role: 'admin' | 'teacher' | 'student' }) {
             {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             {theme === 'dark' ? 'Yorug\' rejim' : 'Qorong\'u rejim'}
           </button>
+          {/* Chiqish faqat katta ekranlarda ko'rinadi */}
           <button
             type="button"
             onClick={() => {
               logout()
               closeMobileMenu()
             }}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+            className="hidden md:flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
           >
             <LogOut className="w-5 h-5" />
             Chiqish
