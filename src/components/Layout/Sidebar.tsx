@@ -16,23 +16,30 @@ import {
   RefreshCw,
   BarChart3,
   DollarSign,
-  FileText,
   Bot,
+  MoreHorizontal,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/hooks/useTheme'
 
-const adminNav = [
+// Asosiy menyu - har kuni ishlatiladigan
+const adminMainNav = [
   { to: '/admin', icon: LayoutDashboard, label: 'Boshqaruv' },
   { to: '/admin/teachers', icon: Users, label: 'Ustozlar' },
   { to: '/admin/groups', icon: FolderKanban, label: 'Guruhlar' },
   { to: '/admin/students', icon: GraduationCap, label: 'O\'quvchilar' },
-  { to: '/admin/statistics', icon: BarChart3, label: 'Statistika va Reyting' },
+  { to: '/admin/news', icon: Mail, label: 'Yangiliklar' },
+  { to: '/admin/statistics', icon: BarChart3, label: 'Statistika' },
   { to: '/admin/payments', icon: DollarSign, label: 'To\'lovlar' },
-  { to: '/admin/ai-settings', icon: Bot, label: 'AI Sozlamalari' },
+]
+
+// Boshqalar - kamdan-kam ishlatiladigan
+const adminOthersNav = [
   { to: '/admin/logins', icon: Key, label: 'Loginlar ro\'yxati' },
   { to: '/admin/create-login', icon: UserPlus, label: 'Login yaratish' },
-  { to: '/admin/news', icon: Mail, label: 'Yangiliklar' },
+  { to: '/admin/ai-settings', icon: Bot, label: 'AI Sozlamalari' },
   { to: '/admin/persistent-storage', icon: RefreshCw, label: 'Doimiy saqlash' },
   { to: '/admin/data-sync', icon: RefreshCw, label: 'Ma\'lumot ulashish' },
   { to: '/admin/monthly-reports', icon: Mail, label: 'Oylik hisobotlar' },
@@ -46,7 +53,10 @@ export function Sidebar({ role }: { role: 'admin' | 'teacher' | 'student' }) {
   const { logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const nav = role === 'admin' ? adminNav : role === 'teacher' ? teacherNav : []
+  const [isOthersOpen, setIsOthersOpen] = useState(false)
+  
+  const mainNav = role === 'admin' ? adminMainNav : role === 'teacher' ? teacherNav : []
+  const othersNav = role === 'admin' ? adminOthersNav : []
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
@@ -54,6 +64,10 @@ export function Sidebar({ role }: { role: 'admin' | 'teacher' | 'student' }) {
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false)
+  }
+
+  const toggleOthers = () => {
+    setIsOthersOpen(!isOthersOpen)
   }
 
   return (
@@ -94,9 +108,10 @@ export function Sidebar({ role }: { role: 'admin' | 'teacher' | 'student' }) {
             </div>
           </div>
         </NavLink>
-        {nav.length > 0 && (
-          <nav className="flex-1 p-3 space-y-1">
-            {nav.map(({ to, icon: Icon, label }) => (
+        {mainNav.length > 0 && (
+          <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+            {/* Asosiy menyu */}
+            {mainNav.map(({ to, icon: Icon, label }) => (
               <NavLink
                 key={to}
                 to={to}
@@ -114,6 +129,48 @@ export function Sidebar({ role }: { role: 'admin' | 'teacher' | 'student' }) {
                 {label}
               </NavLink>
             ))}
+            
+            {/* Boshqalar bo'limi */}
+            {othersNav.length > 0 && (
+              <div className="pt-2">
+                <button
+                  onClick={toggleOthers}
+                  className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <MoreHorizontal className="w-5 h-5 shrink-0" />
+                    Boshqalar
+                  </div>
+                  {isOthersOpen ? (
+                    <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
+                </button>
+                
+                {isOthersOpen && (
+                  <div className="mt-1 ml-4 space-y-1 border-l-2 border-gray-200 dark:border-gray-700 pl-2">
+                    {othersNav.map(({ to, icon: Icon, label }) => (
+                      <NavLink
+                        key={to}
+                        to={to}
+                        onClick={closeMobileMenu}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            isActive
+                              ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300'
+                              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                          }`
+                        }
+                      >
+                        <Icon className="w-4 h-4 shrink-0" />
+                        {label}
+                      </NavLink>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </nav>
         )}
         <div className="p-3 border-t border-gray-200 dark:border-gray-700 space-y-1">

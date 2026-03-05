@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { getStudents, getGradesByStudent } from '@/lib/data'
+import { globalDb } from '@/lib/globalDb'
 import type { Profile, Grade } from '@/types'
-import { Mail, Send, CheckCircle, User, Award } from 'lucide-react'
+import { Mail, Send, User, Award } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 type GradeCategory = 'alo' | 'yaxshi' | 'qoniqarli' | 'hammasi'
@@ -63,11 +63,12 @@ export default function AdminMonthlyReports() {
 
   async function loadStudentsWithStats() {
     setLoading(true)
-    const allStudents = await getStudents()
+    const db = await globalDb.loadDatabase()
+    const allStudents = db.profiles.filter(p => p.role === 'student')
     
     const withStats: StudentWithStats[] = await Promise.all(
       allStudents.map(async (student) => {
-        const grades = await getGradesByStudent(student.id)
+        const grades = db.grades.filter(g => g.student_id === student.id)
         const average = grades.length 
           ? grades.reduce((sum, g) => sum + g.grade_value + g.bonus, 0) / grades.length 
           : 0
