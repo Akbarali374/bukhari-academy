@@ -51,6 +51,16 @@ const teacherNav = [
   { to: '/teacher', icon: FolderKanban, label: 'Mening guruhlarim' },
 ]
 
+// Teacher uchun "Boshqalar" - faqat Chiqish
+const teacherOthersNav = [
+  { to: 'logout', icon: LogOut, label: 'Chiqish', action: 'logout' },
+]
+
+// Student uchun asosiy menyu yo'q, faqat "Boshqalar"da Chiqish
+const studentOthersNav = [
+  { to: 'logout', icon: LogOut, label: 'Chiqish', action: 'logout' },
+]
+
 export function Sidebar({ role }: { role: 'admin' | 'teacher' | 'student' }) {
   const { logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
@@ -58,7 +68,7 @@ export function Sidebar({ role }: { role: 'admin' | 'teacher' | 'student' }) {
   const [isOthersOpen, setIsOthersOpen] = useState(false)
   
   const mainNav = role === 'admin' ? adminMainNav : role === 'teacher' ? teacherNav : []
-  const othersNav = role === 'admin' ? adminOthersNav : []
+  const othersNav = role === 'admin' ? adminOthersNav : role === 'teacher' ? teacherOthersNav : studentOthersNav
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
