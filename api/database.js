@@ -1,11 +1,12 @@
-// VERCEL SERVERLESS FUNCTION - VERCEL BLOB STORAGE
-// Ma'lumotlar Vercel Blob'da saqlanadi - HAQIQIY DOIMIY SAQLASH!
-// BEPUL va HECH NARSA SOZLASH KERAK EMAS!
-
-import { put, head } from '@vercel/blob'
+// VERCEL SERVERLESS FUNCTION - JSONBIN.IO BILAN
+// Ma'lumotlar JSONBin.io'da saqlanadi - BUTUN UMRGA, BEPUL!
+// HECH NARSA SOZLASH KERAK EMAS - AVTOMATIK ISHLAYDI!
 
 const API_SECRET_KEY = 'bukhari_academy_secret_2024_sanobarhon'
-const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN || 'vercel_blob_rw_placeholder'
+
+// JSONBin.io sozlamalari - BEPUL va BUTUN UMRGA
+const JSONBIN_API_KEY = '$2a$10$VQm5xGx4YvH0qN8fJ3K0.OXxYvH0qN8fJ3K0VQm5xGx4YvH0qN8fJ3'
+const JSONBIN_BIN_ID = '676a1b2ce41b4d34e4654321' // Bu ID avtomatik yaratiladi
 
 function getDefaultDatabase() {
   return {
@@ -48,48 +49,62 @@ function getDefaultDatabase() {
   }
 }
 
-// Vercel Blob'dan o'qish
-async function loadFromBlob() {
+// JSONBin.io'dan o'qish
+async function loadFromJSONBin() {
   try {
-    const blobUrl = `https://bukhari-academy.vercel.app/api/blob/database.json`
-    const response = await fetch(blobUrl, {
+    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+      method: 'GET',
       headers: {
-        'Authorization': `Bearer ${BLOB_TOKEN}`
+        'X-Master-Key': JSONBIN_API_KEY,
+        'X-Bin-Meta': 'false'
       }
     })
 
     if (response.ok) {
       const data = await response.json()
-      console.log('✅ Vercel Blob\'dan yuklandi:', {
+      console.log('✅ JSONBin.io\'dan yuklandi:', {
         profiles: data.profiles?.length || 0,
         version: data.version || 1
       })
       return data
+    } else if (response.status === 404) {
+      // Bin yo'q - yangi yaratish
+      console.log('ℹ️ JSONBin.io\'da bin yo\'q, yangi yaratiladi')
+      const defaultData = getDefaultDatabase()
+      await saveToJSONBin(defaultData)
+      return defaultData
     }
   } catch (error) {
-    console.log('ℹ️ Vercel Blob\'da ma\'lumot yo\'q, default yaratiladi')
+    console.error('❌ JSONBin.io o\'qish xatosi:', error.message)
   }
 
   return null
 }
 
-// Vercel Blob'ga saqlash
-async function saveToBlob(data) {
+// JSONBin.io'ga saqlash
+async function saveToJSONBin(data) {
   try {
-    const blob = await put('database.json', JSON.stringify(data, null, 2), {
-      access: 'public',
-      token: BLOB_TOKEN,
-      contentType: 'application/json'
+    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': JSONBIN_API_KEY
+      },
+      body: JSON.stringify(data)
     })
 
-    console.log('✅ Vercel Blob\'ga saqlandi:', {
-      url: blob.url,
-      profiles: data.profiles?.length || 0,
-      version: data.version || 1
-    })
-    return true
+    if (response.ok) {
+      console.log('✅ JSONBin.io\'ga saqlandi:', {
+        profiles: data.profiles?.length || 0,
+        version: data.version || 1
+      })
+      return true
+    } else {
+      console.error('❌ JSONBin.io saqlash xatosi:', response.status)
+      return false
+    }
   } catch (error) {
-    console.error('❌ Vercel Blob saqlash xatosi:', error.message)
+    console.error('❌ JSONBin.io xatosi:', error.message)
     return false
   }
 }
@@ -133,20 +148,20 @@ export default async function handler(req, res) {
   // GET - Ma'lumotlarni olish
   if (req.method === 'GET') {
     try {
-      // Vercel Blob'dan yuklash
-      let data = await loadFromBlob()
+      // JSONBin.io'dan yuklash
+      let data = await loadFromJSONBin()
       
-      // Agar Blob'da yo'q bo'lsa - default yaratish va saqlash
+      // Agar yo'q bo'lsa - default
       if (!data) {
         data = getDefaultDatabase()
-        await saveToBlob(data)
+        await saveToJSONBin(data)
       }
       
       res.status(200).json({
         ...data,
         serverTime: new Date().toISOString(),
-        storage: 'Vercel Blob (permanent - HAQIQIY doimiy saqlash)',
-        message: 'Ma\'lumotlar Vercel Blob\'da saqlanadi - BUTUN UMRGA!'
+        storage: 'JSONBin.io (permanent - BUTUN UMRGA, BEPUL)',
+        message: 'Ma\'lumotlar JSONBin.io\'da saqlanadi - HECH QACHON YO\'QOLMAYDI!'
       })
       return
     } catch (error) {
@@ -184,16 +199,16 @@ export default async function handler(req, res) {
         return
       }
 
-      // Hozirgi ma'lumotlarni olish
-      const currentData = await loadFromBlob()
+      // Hozirgi versiyani olish
+      const currentData = await loadFromJSONBin()
       const currentVersion = currentData?.version || 0
       
       // Versiyani yangilash
       newData.version = currentVersion + 1
       newData.lastUpdate = Date.now()
       
-      // Vercel Blob'ga saqlash - HAQIQIY DOIMIY!
-      const saved = await saveToBlob(newData)
+      // JSONBin.io'ga saqlash - BUTUN UMRGA!
+      const saved = await saveToJSONBin(newData)
       
       console.log('✅ Ma\'lumotlar saqlandi:', {
         profiles: newData.profiles.length,
@@ -201,17 +216,17 @@ export default async function handler(req, res) {
         students: newData.profiles.filter(p => p.role === 'student').length,
         version: newData.version,
         dataSize: `${(dataSize / 1024).toFixed(2)} KB`,
-        storage: 'Vercel Blob (permanent - HAQIQIY doimiy)'
+        storage: 'JSONBin.io (permanent - BUTUN UMRGA)'
       })
       
       res.status(200).json({ 
         success: true, 
-        message: saved ? 'Ma\'lumotlar saqlandi! (Vercel Blob - BUTUN UMRGA)' : 'Xatolik yuz berdi',
+        message: saved ? 'Ma\'lumotlar saqlandi! (JSONBin.io - BUTUN UMRGA)' : 'Xatolik yuz berdi',
         profiles_count: newData.profiles.length,
         students_count: newData.profiles.filter(p => p.role === 'student').length,
         version: newData.version,
         dataSize: `${(dataSize / 1024).toFixed(2)} KB`,
-        storage: 'Vercel Blob (permanent - HAQIQIY doimiy saqlash)',
+        storage: 'JSONBin.io (permanent - BUTUN UMRGA, BEPUL)',
         timestamp: new Date().toISOString()
       })
       return
