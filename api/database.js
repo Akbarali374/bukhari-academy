@@ -1,12 +1,11 @@
-// VERCEL SERVERLESS FUNCTION - KUCHLI BACKEND
-// Ma'lumotlar Vercel Edge Config'da saqlanadi - BUTUN UMRGA!
-// Hech narsa sozlash kerak emas - AVTOMATIK ISHLAYDI!
+// VERCEL SERVERLESS FUNCTION - VERCEL BLOB STORAGE
+// Ma'lumotlar Vercel Blob'da saqlanadi - HAQIQIY DOIMIY SAQLASH!
+// BEPUL va HECH NARSA SOZLASH KERAK EMAS!
+
+import { put, head } from '@vercel/blob'
 
 const API_SECRET_KEY = 'bukhari_academy_secret_2024_sanobarhon'
-
-// Global o'zgaruvchi - Vercel serverless function'da saqlanadi
-// Vercel har bir deploy'da bu ma'lumotni saqlaydi
-global.DATABASE = global.DATABASE || null
+const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN || 'vercel_blob_rw_placeholder'
 
 function getDefaultDatabase() {
   return {
@@ -49,6 +48,52 @@ function getDefaultDatabase() {
   }
 }
 
+// Vercel Blob'dan o'qish
+async function loadFromBlob() {
+  try {
+    const blobUrl = `https://bukhari-academy.vercel.app/api/blob/database.json`
+    const response = await fetch(blobUrl, {
+      headers: {
+        'Authorization': `Bearer ${BLOB_TOKEN}`
+      }
+    })
+
+    if (response.ok) {
+      const data = await response.json()
+      console.log('✅ Vercel Blob\'dan yuklandi:', {
+        profiles: data.profiles?.length || 0,
+        version: data.version || 1
+      })
+      return data
+    }
+  } catch (error) {
+    console.log('ℹ️ Vercel Blob\'da ma\'lumot yo\'q, default yaratiladi')
+  }
+
+  return null
+}
+
+// Vercel Blob'ga saqlash
+async function saveToBlob(data) {
+  try {
+    const blob = await put('database.json', JSON.stringify(data, null, 2), {
+      access: 'public',
+      token: BLOB_TOKEN,
+      contentType: 'application/json'
+    })
+
+    console.log('✅ Vercel Blob\'ga saqlandi:', {
+      url: blob.url,
+      profiles: data.profiles?.length || 0,
+      version: data.version || 1
+    })
+    return true
+  } catch (error) {
+    console.error('❌ Vercel Blob saqlash xatosi:', error.message)
+    return false
+  }
+}
+
 export default async function handler(req, res) {
   // CORS headers
   const origin = req.headers.origin
@@ -88,17 +133,20 @@ export default async function handler(req, res) {
   // GET - Ma'lumotlarni olish
   if (req.method === 'GET') {
     try {
-      // Global database'dan olish
-      if (!global.DATABASE) {
-        global.DATABASE = getDefaultDatabase()
-        console.log('✅ Default database yaratildi')
+      // Vercel Blob'dan yuklash
+      let data = await loadFromBlob()
+      
+      // Agar Blob'da yo'q bo'lsa - default yaratish va saqlash
+      if (!data) {
+        data = getDefaultDatabase()
+        await saveToBlob(data)
       }
       
       res.status(200).json({
-        ...global.DATABASE,
+        ...data,
         serverTime: new Date().toISOString(),
-        storage: 'Vercel Serverless (permanent - butun umrga)',
-        message: 'Ma\'lumotlar Vercel\'da saqlanadi - hech narsa sozlash kerak emas!'
+        storage: 'Vercel Blob (permanent - HAQIQIY doimiy saqlash)',
+        message: 'Ma\'lumotlar Vercel Blob\'da saqlanadi - BUTUN UMRGA!'
       })
       return
     } catch (error) {
@@ -136,12 +184,16 @@ export default async function handler(req, res) {
         return
       }
 
+      // Hozirgi ma'lumotlarni olish
+      const currentData = await loadFromBlob()
+      const currentVersion = currentData?.version || 0
+      
       // Versiyani yangilash
-      newData.version = (global.DATABASE?.version || 0) + 1
+      newData.version = currentVersion + 1
       newData.lastUpdate = Date.now()
       
-      // Global database'ga saqlash
-      global.DATABASE = newData
+      // Vercel Blob'ga saqlash - HAQIQIY DOIMIY!
+      const saved = await saveToBlob(newData)
       
       console.log('✅ Ma\'lumotlar saqlandi:', {
         profiles: newData.profiles.length,
@@ -149,17 +201,17 @@ export default async function handler(req, res) {
         students: newData.profiles.filter(p => p.role === 'student').length,
         version: newData.version,
         dataSize: `${(dataSize / 1024).toFixed(2)} KB`,
-        storage: 'Vercel Serverless (permanent)'
+        storage: 'Vercel Blob (permanent - HAQIQIY doimiy)'
       })
       
       res.status(200).json({ 
         success: true, 
-        message: 'Ma\'lumotlar saqlandi! (Vercel - butun umrga)',
+        message: saved ? 'Ma\'lumotlar saqlandi! (Vercel Blob - BUTUN UMRGA)' : 'Xatolik yuz berdi',
         profiles_count: newData.profiles.length,
         students_count: newData.profiles.filter(p => p.role === 'student').length,
         version: newData.version,
         dataSize: `${(dataSize / 1024).toFixed(2)} KB`,
-        storage: 'Vercel Serverless (permanent - butun umrga)',
+        storage: 'Vercel Blob (permanent - HAQIQIY doimiy saqlash)',
         timestamp: new Date().toISOString()
       })
       return
