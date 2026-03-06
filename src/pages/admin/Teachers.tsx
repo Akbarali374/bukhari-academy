@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getTeachers, createTeacher } from '@/lib/data'
+import { globalDb } from '@/lib/globalDb'
 import type { Profile } from '@/types'
 import { UserPlus } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -14,18 +14,26 @@ export default function AdminTeachers() {
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  const load = () => getTeachers().then(setTeachers).finally(() => setLoading(false))
+  const load = async () => {
+    setLoading(true)
+    const db = await globalDb.loadDatabase()
+    const teachersList = db.profiles.filter(p => p.role === 'teacher')
+    setTeachers(teachersList)
+    setLoading(false)
+  }
+  
   useEffect(() => { load() }, [])
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
     setSubmitting(true)
-    const result = await createTeacher(email.trim(), firstName.trim(), lastName.trim(), password)
-    setSubmitting(false)
     
-    if ('error' in result) {
-      // Email allaqachon mavjud bo'lsa
-      if (result.error.includes('email') || result.error.includes('allaqachon') || result.error.includes('mavjud')) {
+    try {
+      // Email tekshirish
+      const db = await globalDb.loadDatabase()
+      const existingUser = db.profiles.find(p => p.email === email.trim())
+      
+      if (existingUser) {
         toast.error(`❌ Bu email allaqachon mavjud: ${email}`, {
           duration: 4000,
           style: {
@@ -35,29 +43,41 @@ export default function AdminTeachers() {
             fontWeight: 'bold'
           }
         })
-      } else {
-        toast.error(result.error)
+        setSubmitting(false)
+        return
       }
-      return
+      
+      // Ustoz yaratish
+      await globalDb.createProfile({
+        email: email.trim(),
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        role: 'teacher',
+        group_id: null
+      }, password)
+      
+      // Muvaffaqiyatli yaratildi
+      toast.success(`✅ Ustoz muvaffaqiyatli qo'shildi!\n📧 Email: ${email}\n🔑 Parol: ${password}`, {
+        duration: 5000,
+        style: {
+          background: '#10b981',
+          color: '#fff',
+          fontSize: '16px',
+          fontWeight: 'bold'
+        }
+      })
+      
+      setModal(false)
+      setEmail('')
+      setFirstName('')
+      setLastName('')
+      setPassword('')
+      await load()
+    } catch (error) {
+      toast.error('Xatolik yuz berdi')
     }
     
-    // Muvaffaqiyatli yaratildi
-    toast.success(`✅ Ustoz muvaffaqiyatli qo'shildi!\n📧 Email: ${email}\n🔑 Parol: ${password}`, {
-      duration: 5000,
-      style: {
-        background: '#10b981',
-        color: '#fff',
-        fontSize: '16px',
-        fontWeight: 'bold'
-      }
-    })
-    
-    setModal(false)
-    setEmail('')
-    setFirstName('')
-    setLastName('')
-    setPassword('')
-    load()
+    setSubmitting(false)
   }
 
   return (
