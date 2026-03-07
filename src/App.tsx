@@ -27,8 +27,6 @@ import StudentGrades from '@/pages/student/Grades'
 import StudentTests from '@/pages/student/Tests'
 import StudentAttendance from '@/pages/student/Attendance'
 import AdminNews from '@/pages/admin/News'
-import AdminDataSync from '@/pages/admin/DataSync'
-import AdminPersistentStorage from '@/pages/admin/PersistentStorage'
 import StudentNews from '@/pages/student/News'
 import StudentHomework from '@/pages/student/Homework'
 
@@ -86,8 +84,6 @@ export default function App() {
         <Route path="statistics" element={<AdminStatistics />} />
         <Route path="payments" element={<AdminPayments />} />
         <Route path="ai-settings" element={<AdminAISettings />} />
-        <Route path="data-sync" element={<AdminDataSync />} />
-        <Route path="persistent-storage" element={<AdminPersistentStorage />} />
         <Route path="monthly-reports" element={<AdminMonthlyReports />} />
       </Route>
       <Route

@@ -40,8 +40,6 @@ const adminOthersNav = [
   { to: '/admin/logins', icon: Key, label: 'Loginlar ro\'yxati' },
   { to: '/admin/create-login', icon: UserPlus, label: 'Login yaratish' },
   { to: '/admin/ai-settings', icon: Bot, label: 'AI Sozlamalari' },
-  { to: '/admin/persistent-storage', icon: RefreshCw, label: 'Doimiy saqlash' },
-  { to: '/admin/data-sync', icon: RefreshCw, label: 'Ma\'lumot ulashish' },
   { to: '/admin/monthly-reports', icon: Mail, label: 'Oylik hisobotlar' },
   // Chiqish faqat mobilda "Boshqalar"da
   { to: 'logout', icon: LogOut, label: 'Chiqish', action: 'logout' },

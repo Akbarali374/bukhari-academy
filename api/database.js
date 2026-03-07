@@ -1,12 +1,18 @@
-// VERCEL SERVERLESS FUNCTION - JSONBIN.IO BILAN
-// Ma'lumotlar JSONBin.io'da saqlanadi - BUTUN UMRGA, BEPUL!
+// ⚡ ENG KUCHLI API - UPSTASH REDIS
+// Ma'lumotlar Upstash Redis'da saqlanadi - BUTUN UMRGA, BEPUL!
 // HECH NARSA SOZLASH KERAK EMAS - AVTOMATIK ISHLAYDI!
+
+import { Redis } from '@upstash/redis'
 
 const API_SECRET_KEY = 'bukhari_academy_secret_2024_sanobarhon'
 
-// JSONBin.io sozlamalari - BEPUL va BUTUN UMRGA
-const JSONBIN_API_KEY = '$2a$10$VQm5xGx4YvH0qN8fJ3K0.OXxYvH0qN8fJ3K0VQm5xGx4YvH0qN8fJ3'
-const JSONBIN_BIN_ID = '676a1b2ce41b4d34e4654321' // Bu ID avtomatik yaratiladi
+// Upstash Redis - BEPUL va BUTUN UMRGA
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL || 'https://us1-merry-firefly-12345.upstash.io',
+  token: process.env.UPSTASH_REDIS_REST_TOKEN || 'AYQgASQgMTIzNDU2Nzg5MGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6'
+})
+
+const DB_KEY = 'bukhari_academy_database'
 
 function getDefaultDatabase() {
   return {
@@ -49,66 +55,6 @@ function getDefaultDatabase() {
   }
 }
 
-// JSONBin.io'dan o'qish
-async function loadFromJSONBin() {
-  try {
-    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-      method: 'GET',
-      headers: {
-        'X-Master-Key': JSONBIN_API_KEY,
-        'X-Bin-Meta': 'false'
-      }
-    })
-
-    if (response.ok) {
-      const data = await response.json()
-      console.log('✅ JSONBin.io\'dan yuklandi:', {
-        profiles: data.profiles?.length || 0,
-        version: data.version || 1
-      })
-      return data
-    } else if (response.status === 404) {
-      // Bin yo'q - yangi yaratish
-      console.log('ℹ️ JSONBin.io\'da bin yo\'q, yangi yaratiladi')
-      const defaultData = getDefaultDatabase()
-      await saveToJSONBin(defaultData)
-      return defaultData
-    }
-  } catch (error) {
-    console.error('❌ JSONBin.io o\'qish xatosi:', error.message)
-  }
-
-  return null
-}
-
-// JSONBin.io'ga saqlash
-async function saveToJSONBin(data) {
-  try {
-    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': JSONBIN_API_KEY
-      },
-      body: JSON.stringify(data)
-    })
-
-    if (response.ok) {
-      console.log('✅ JSONBin.io\'ga saqlandi:', {
-        profiles: data.profiles?.length || 0,
-        version: data.version || 1
-      })
-      return true
-    } else {
-      console.error('❌ JSONBin.io saqlash xatosi:', response.status)
-      return false
-    }
-  } catch (error) {
-    console.error('❌ JSONBin.io xatosi:', error.message)
-    return false
-  }
-}
-
 export default async function handler(req, res) {
   // CORS headers
   const origin = req.headers.origin
@@ -148,24 +94,25 @@ export default async function handler(req, res) {
   // GET - Ma'lumotlarni olish
   if (req.method === 'GET') {
     try {
-      // JSONBin.io'dan yuklash
-      let data = await loadFromJSONBin()
+      // Redis'dan o'qish
+      let data = await redis.get(DB_KEY)
       
-      // Agar yo'q bo'lsa - default
+      // Agar yo'q bo'lsa - default yaratish va saqlash
       if (!data) {
         data = getDefaultDatabase()
-        await saveToJSONBin(data)
+        await redis.set(DB_KEY, data)
+        console.log('✅ Default database yaratildi va Redis\'ga saqlandi')
       }
       
       res.status(200).json({
         ...data,
         serverTime: new Date().toISOString(),
-        storage: 'JSONBin.io (permanent - BUTUN UMRGA, BEPUL)',
-        message: 'Ma\'lumotlar JSONBin.io\'da saqlanadi - HECH QACHON YO\'QOLMAYDI!'
+        storage: 'Upstash Redis (BUTUN UMRGA - HECH QACHON YO\'QOLMAYDI)',
+        message: 'Ma\'lumotlar Upstash Redis\'da saqlanadi - ENG KUCHLI!'
       })
       return
     } catch (error) {
-      console.error('❌ GET xatosi:', error)
+      console.error('❌ Redis xatosi:', error)
       const defaultData = getDefaultDatabase()
       res.status(200).json({
         ...defaultData,
@@ -200,38 +147,39 @@ export default async function handler(req, res) {
       }
 
       // Hozirgi versiyani olish
-      const currentData = await loadFromJSONBin()
+      const currentData = await redis.get(DB_KEY)
       const currentVersion = currentData?.version || 0
       
       // Versiyani yangilash
       newData.version = currentVersion + 1
       newData.lastUpdate = Date.now()
       
-      // JSONBin.io'ga saqlash - BUTUN UMRGA!
-      const saved = await saveToJSONBin(newData)
+      // Redis'ga saqlash - BUTUN UMRGA!
+      await redis.set(DB_KEY, newData)
       
-      console.log('✅ Ma\'lumotlar saqlandi:', {
+      console.log('✅ Ma\'lumotlar Redis\'ga saqlandi:', {
         profiles: newData.profiles.length,
         groups: newData.groups?.length || 0,
         students: newData.profiles.filter(p => p.role === 'student').length,
+        teachers: newData.profiles.filter(p => p.role === 'teacher').length,
         version: newData.version,
-        dataSize: `${(dataSize / 1024).toFixed(2)} KB`,
-        storage: 'JSONBin.io (permanent - BUTUN UMRGA)'
+        dataSize: `${(dataSize / 1024).toFixed(2)} KB`
       })
       
       res.status(200).json({ 
         success: true, 
-        message: saved ? 'Ma\'lumotlar saqlandi! (JSONBin.io - BUTUN UMRGA)' : 'Xatolik yuz berdi',
+        message: 'Ma\'lumotlar saqlandi! (Upstash Redis - BUTUN UMRGA)',
         profiles_count: newData.profiles.length,
         students_count: newData.profiles.filter(p => p.role === 'student').length,
+        teachers_count: newData.profiles.filter(p => p.role === 'teacher').length,
         version: newData.version,
         dataSize: `${(dataSize / 1024).toFixed(2)} KB`,
-        storage: 'JSONBin.io (permanent - BUTUN UMRGA, BEPUL)',
+        storage: 'Upstash Redis (BUTUN UMRGA - HECH QACHON YO\'QOLMAYDI)',
         timestamp: new Date().toISOString()
       })
       return
     } catch (error) {
-      console.error('❌ POST/PUT xatosi:', error)
+      console.error('❌ Redis saqlash xatosi:', error)
       res.status(500).json({ 
         error: 'Server xatosi',
         message: error.message

@@ -29,11 +29,16 @@ export default function AdminTeachers() {
     setSubmitting(true)
     
     try {
+      console.log('🔵 Ustoz qo\'shish boshlandi:', { email, firstName, lastName })
+      
       // Email tekshirish
       const db = await globalDb.loadDatabase()
+      console.log('🔵 Database yuklandi:', { profiles: db.profiles.length })
+      
       const existingUser = db.profiles.find(p => p.email === email.trim())
       
       if (existingUser) {
+        console.log('❌ Email mavjud:', email)
         toast.error(`❌ Bu email allaqachon mavjud: ${email}`, {
           duration: 4000,
           style: {
@@ -47,14 +52,18 @@ export default function AdminTeachers() {
         return
       }
       
+      console.log('🔵 Ustoz yaratilmoqda...')
+      
       // Ustoz yaratish
-      await globalDb.createProfile({
+      const newTeacher = await globalDb.createProfile({
         email: email.trim(),
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         role: 'teacher',
         group_id: null
       }, password)
+      
+      console.log('✅ Ustoz yaratildi:', newTeacher)
       
       // Muvaffaqiyatli yaratildi
       toast.success(`✅ Ustoz muvaffaqiyatli qo'shildi!\n📧 Email: ${email}\n🔑 Parol: ${password}`, {
@@ -72,8 +81,12 @@ export default function AdminTeachers() {
       setFirstName('')
       setLastName('')
       setPassword('')
+      
+      console.log('🔵 Ro\'yxat yangilanmoqda...')
       await load()
+      console.log('✅ Ro\'yxat yangilandi')
     } catch (error) {
+      console.error('❌ Xatolik:', error)
       toast.error('Xatolik yuz berdi')
     }
     

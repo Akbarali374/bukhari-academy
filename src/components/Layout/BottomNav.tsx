@@ -14,19 +14,19 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   // Admin - faqat 4 ta
-  { to: '/admin/dashboard', icon: Home, label: 'Bosh', roles: ['admin'] },
+  { to: '/admin', icon: Home, label: 'Bosh', roles: ['admin'] },
   { to: '/admin/students', icon: GraduationCap, label: 'O\'quvchi', roles: ['admin'] },
   { to: '/admin/statistics', icon: BarChart3, label: 'Statistika', roles: ['admin'] },
   { to: '/admin/payments', icon: DollarSign, label: 'To\'lov', roles: ['admin'] },
   
   // Teacher - faqat 4 ta
-  { to: '/teacher/groups', icon: FolderKanban, label: 'Guruh', roles: ['teacher'] },
+  { to: '/teacher', icon: FolderKanban, label: 'Guruh', roles: ['teacher'] },
   { to: '/teacher/students', icon: GraduationCap, label: 'O\'quvchi', roles: ['teacher'] },
   { to: '/teacher/attendance', icon: Calendar, label: 'Davomat', roles: ['teacher'] },
   { to: '/teacher/homework', icon: BookOpen, label: 'Vazifa', roles: ['teacher'] },
   
   // Student - faqat 4 ta
-  { to: '/student/news', icon: Newspaper, label: 'Yangilik', roles: ['student'] },
+  { to: '/student', icon: Newspaper, label: 'Yangilik', roles: ['student'] },
   { to: '/student/grades', icon: BarChart3, label: 'Baho', roles: ['student'] },
   { to: '/student/homework', icon: BookOpen, label: 'Vazifa', roles: ['student'] },
   { to: '/student/attendance', icon: Calendar, label: 'Davomat', roles: ['student'] },
