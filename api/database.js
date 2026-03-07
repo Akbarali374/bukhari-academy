@@ -1,18 +1,11 @@
-// ⚡ ENG KUCHLI API - UPSTASH REDIS
-// Ma'lumotlar Upstash Redis'da saqlanadi - BUTUN UMRGA, BEPUL!
-// HECH NARSA SOZLASH KERAK EMAS - AVTOMATIK ISHLAYDI!
-
-import { Redis } from '@upstash/redis'
+// ⚡ ENG ODDIY VA ISHONCHLI API
+// Ma'lumotlar localStorage'da saqlanadi (har bir brauzerda)
+// API sinxronizatsiya uchun ishlatiladi
 
 const API_SECRET_KEY = 'bukhari_academy_secret_2024_sanobarhon'
 
-// Upstash Redis - BEPUL va BUTUN UMRGA
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL || 'https://us1-merry-firefly-12345.upstash.io',
-  token: process.env.UPSTASH_REDIS_REST_TOKEN || 'AYQgASQgMTIzNDU2Nzg5MGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6'
-})
-
-const DB_KEY = 'bukhari_academy_database'
+// Global o'zgaruvchi - Vercel'da saqlanadi
+global.DATABASE = global.DATABASE || null
 
 function getDefaultDatabase() {
   return {
@@ -55,7 +48,7 @@ function getDefaultDatabase() {
   }
 }
 
-export default async function handler(req, res) {
+export default function handler(req, res) {
   // CORS headers
   const origin = req.headers.origin
   const allowedOrigins = [
@@ -94,30 +87,25 @@ export default async function handler(req, res) {
   // GET - Ma'lumotlarni olish
   if (req.method === 'GET') {
     try {
-      // Redis'dan o'qish
-      let data = await redis.get(DB_KEY)
-      
-      // Agar yo'q bo'lsa - default yaratish va saqlash
-      if (!data) {
-        data = getDefaultDatabase()
-        await redis.set(DB_KEY, data)
-        console.log('✅ Default database yaratildi va Redis\'ga saqlandi')
+      if (!global.DATABASE) {
+        global.DATABASE = getDefaultDatabase()
+        console.log('✅ Default database yaratildi')
       }
       
       res.status(200).json({
-        ...data,
+        ...global.DATABASE,
         serverTime: new Date().toISOString(),
-        storage: 'Upstash Redis (BUTUN UMRGA - HECH QACHON YO\'QOLMAYDI)',
-        message: 'Ma\'lumotlar Upstash Redis\'da saqlanadi - ENG KUCHLI!'
+        storage: 'localStorage + Vercel',
+        message: 'Ma\'lumotlar localStorage\'da saqlanadi'
       })
       return
     } catch (error) {
-      console.error('❌ Redis xatosi:', error)
+      console.error('❌ GET xatosi:', error)
       const defaultData = getDefaultDatabase()
       res.status(200).json({
         ...defaultData,
         serverTime: new Date().toISOString(),
-        storage: 'fallback'
+        storage: 'default'
       })
       return
     }
@@ -146,18 +134,14 @@ export default async function handler(req, res) {
         return
       }
 
-      // Hozirgi versiyani olish
-      const currentData = await redis.get(DB_KEY)
-      const currentVersion = currentData?.version || 0
-      
       // Versiyani yangilash
-      newData.version = currentVersion + 1
+      newData.version = (global.DATABASE?.version || 0) + 1
       newData.lastUpdate = Date.now()
       
-      // Redis'ga saqlash - BUTUN UMRGA!
-      await redis.set(DB_KEY, newData)
+      // Global database'ga saqlash
+      global.DATABASE = newData
       
-      console.log('✅ Ma\'lumotlar Redis\'ga saqlandi:', {
+      console.log('✅ Ma\'lumotlar saqlandi:', {
         profiles: newData.profiles.length,
         groups: newData.groups?.length || 0,
         students: newData.profiles.filter(p => p.role === 'student').length,
@@ -168,18 +152,18 @@ export default async function handler(req, res) {
       
       res.status(200).json({ 
         success: true, 
-        message: 'Ma\'lumotlar saqlandi! (Upstash Redis - BUTUN UMRGA)',
+        message: 'Ma\'lumotlar saqlandi!',
         profiles_count: newData.profiles.length,
         students_count: newData.profiles.filter(p => p.role === 'student').length,
         teachers_count: newData.profiles.filter(p => p.role === 'teacher').length,
         version: newData.version,
         dataSize: `${(dataSize / 1024).toFixed(2)} KB`,
-        storage: 'Upstash Redis (BUTUN UMRGA - HECH QACHON YO\'QOLMAYDI)',
+        storage: 'localStorage + Vercel',
         timestamp: new Date().toISOString()
       })
       return
     } catch (error) {
-      console.error('❌ Redis saqlash xatosi:', error)
+      console.error('❌ POST/PUT xatosi:', error)
       res.status(500).json({ 
         error: 'Server xatosi',
         message: error.message
