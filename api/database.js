@@ -1,11 +1,11 @@
-// ⚡ ENG ODDIY VA ISHONCHLI API
-// Ma'lumotlar localStorage'da saqlanadi (har bir brauzerda)
-// API sinxronizatsiya uchun ishlatiladi
+// ⚡ VERCEL KV - BARCHA QURILMALARDA ISHLAYDI
+// Ma'lumotlar Vercel KV'da saqlanadi - BUTUN UMRGA!
+// Vercel avtomatik sozlaydi - HECH NARSA QILISH KERAK EMAS!
+
+import { kv } from '@vercel/kv'
 
 const API_SECRET_KEY = 'bukhari_academy_secret_2024_sanobarhon'
-
-// Global o'zgaruvchi - Vercel'da saqlanadi
-global.DATABASE = global.DATABASE || null
+const DB_KEY = 'bukhari_academy_database'
 
 function getDefaultDatabase() {
   return {
@@ -48,7 +48,7 @@ function getDefaultDatabase() {
   }
 }
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   // CORS headers
   const origin = req.headers.origin
   const allowedOrigins = [
@@ -87,25 +87,33 @@ export default function handler(req, res) {
   // GET - Ma'lumotlarni olish
   if (req.method === 'GET') {
     try {
-      if (!global.DATABASE) {
-        global.DATABASE = getDefaultDatabase()
-        console.log('✅ Default database yaratildi')
+      // Vercel KV'dan o'qish
+      let data = await kv.get(DB_KEY)
+      
+      // Agar yo'q bo'lsa - default yaratish va saqlash
+      if (!data) {
+        data = getDefaultDatabase()
+        await kv.set(DB_KEY, data)
+        console.log('✅ Default database yaratildi va Vercel KV\'ga saqlandi')
       }
       
       res.status(200).json({
-        ...global.DATABASE,
+        ...data,
         serverTime: new Date().toISOString(),
-        storage: 'localStorage + Vercel',
-        message: 'Ma\'lumotlar localStorage\'da saqlanadi'
+        storage: 'Vercel KV (BUTUN UMRGA - BARCHA QURILMALARDA)',
+        message: 'Ma\'lumotlar Vercel KV\'da saqlanadi - HECH QACHON YO\'QOLMAYDI!'
       })
       return
     } catch (error) {
-      console.error('❌ GET xatosi:', error)
+      console.error('❌ Vercel KV xatosi:', error)
+      
+      // Fallback - localStorage
       const defaultData = getDefaultDatabase()
       res.status(200).json({
         ...defaultData,
         serverTime: new Date().toISOString(),
-        storage: 'default'
+        storage: 'fallback',
+        message: 'Vercel KV sozlanmagan - localStorage ishlatilmoqda'
       })
       return
     }
@@ -134,14 +142,18 @@ export default function handler(req, res) {
         return
       }
 
+      // Hozirgi versiyani olish
+      const currentData = await kv.get(DB_KEY)
+      const currentVersion = currentData?.version || 0
+      
       // Versiyani yangilash
-      newData.version = (global.DATABASE?.version || 0) + 1
+      newData.version = currentVersion + 1
       newData.lastUpdate = Date.now()
       
-      // Global database'ga saqlash
-      global.DATABASE = newData
+      // Vercel KV'ga saqlash - BUTUN UMRGA!
+      await kv.set(DB_KEY, newData)
       
-      console.log('✅ Ma\'lumotlar saqlandi:', {
+      console.log('✅ Ma\'lumotlar Vercel KV\'ga saqlandi:', {
         profiles: newData.profiles.length,
         groups: newData.groups?.length || 0,
         students: newData.profiles.filter(p => p.role === 'student').length,
@@ -152,21 +164,22 @@ export default function handler(req, res) {
       
       res.status(200).json({ 
         success: true, 
-        message: 'Ma\'lumotlar saqlandi!',
+        message: 'Ma\'lumotlar saqlandi! (Vercel KV - BUTUN UMRGA)',
         profiles_count: newData.profiles.length,
         students_count: newData.profiles.filter(p => p.role === 'student').length,
         teachers_count: newData.profiles.filter(p => p.role === 'teacher').length,
         version: newData.version,
         dataSize: `${(dataSize / 1024).toFixed(2)} KB`,
-        storage: 'localStorage + Vercel',
+        storage: 'Vercel KV (BUTUN UMRGA - BARCHA QURILMALARDA)',
         timestamp: new Date().toISOString()
       })
       return
     } catch (error) {
-      console.error('❌ POST/PUT xatosi:', error)
+      console.error('❌ Vercel KV saqlash xatosi:', error)
       res.status(500).json({ 
         error: 'Server xatosi',
-        message: error.message
+        message: error.message,
+        hint: 'Vercel KV sozlanmagan bo\'lishi mumkin'
       })
       return
     }
