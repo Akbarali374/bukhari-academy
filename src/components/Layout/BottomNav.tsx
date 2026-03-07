@@ -26,10 +26,10 @@ const navItems: NavItem[] = [
   { to: '/teacher/homework', icon: BookOpen, label: 'Vazifa', roles: ['teacher'] },
   
   // Student - faqat 4 ta
-  { to: '/student', icon: Newspaper, label: 'Yangilik', roles: ['student'] },
+  { to: '/student/news', icon: Newspaper, label: 'Yangilik', roles: ['student'] },
   { to: '/student/grades', icon: BarChart3, label: 'Baho', roles: ['student'] },
   { to: '/student/homework', icon: BookOpen, label: 'Vazifa', roles: ['student'] },
-  { to: '/student/attendance', icon: Calendar, label: 'Davomat', roles: ['student'] },
+  { to: '/student/tests', icon: Calendar, label: 'Testlar', roles: ['student'] },
 ]
 
 interface BottomNavProps {

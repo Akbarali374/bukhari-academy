@@ -19,9 +19,12 @@ import AdminPayments from '@/pages/admin/Payments'
 import AdminAISettings from '@/pages/admin/AISettings'
 import TeacherGroups from '@/pages/teacher/Groups'
 import TeacherStudents from '@/pages/teacher/Students'
+import TeacherAllStudents from '@/pages/teacher/AllStudents'
 import TeacherAddGrade from '@/pages/teacher/AddGrade'
 import TeacherAttendance from '@/pages/teacher/Attendance'
+import TeacherAllAttendance from '@/pages/teacher/AllAttendance'
 import TeacherHomework from '@/pages/teacher/Homework'
+import TeacherAllHomework from '@/pages/teacher/AllHomework'
 import StudentProfile from '@/pages/student/Profile'
 import StudentGrades from '@/pages/student/Grades'
 import StudentTests from '@/pages/student/Tests'
@@ -96,9 +99,12 @@ export default function App() {
       >
         <Route index element={<TeacherGroups />} />
         <Route path="groups" element={<TeacherGroups />} />
+        <Route path="students" element={<TeacherAllStudents />} />
         <Route path="students/:groupId" element={<TeacherStudents />} />
         <Route path="add-grade/:studentId" element={<TeacherAddGrade />} />
+        <Route path="attendance" element={<TeacherAllAttendance />} />
         <Route path="attendance/:groupId" element={<TeacherAttendance />} />
+        <Route path="homework" element={<TeacherAllHomework />} />
         <Route path="homework/:groupId" element={<TeacherHomework />} />
       </Route>
       <Route
@@ -109,12 +115,12 @@ export default function App() {
           </PrivateRoute>
         }
       >
-        <Route index element={<StudentGrades />} />
+        <Route index element={<StudentNews />} />
+        <Route path="news" element={<StudentNews />} />
         <Route path="profile" element={<StudentProfile />} />
         <Route path="grades" element={<StudentGrades />} />
         <Route path="tests" element={<StudentTests />} />
         <Route path="homework" element={<StudentHomework />} />
-        <Route path="news" element={<StudentNews />} />
         <Route path="attendance" element={<StudentAttendance />} />
       </Route>
       <Route path="/" element={<Navigate to="/login" replace />} />

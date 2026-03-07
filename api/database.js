@@ -2,7 +2,13 @@
 // Ma'lumotlar Vercel KV'da saqlanadi - BUTUN UMRGA!
 // Vercel avtomatik sozlaydi - HECH NARSA QILISH KERAK EMAS!
 
-import { kv } from '@vercel/kv'
+import { createClient } from '@vercel/kv'
+
+// KV client yaratish - environment variable'larni to'g'ri o'qish
+const kv = createClient({
+  url: process.env.KV_REST_API_URL || process.env.KV_URL,
+  token: process.env.KV_REST_API_TOKEN
+})
 
 const API_SECRET_KEY = 'bukhari_academy_secret_2024_sanobarhon'
 const DB_KEY = 'bukhari_academy_database'
