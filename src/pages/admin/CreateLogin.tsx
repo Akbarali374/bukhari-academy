@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getGroupsWithTeacher, createStudent } from '@/lib/data'
 import type { Group } from '@/types'
-import { UserPlus } from 'lucide-react'
+import { UserPlus, Eye, EyeOff } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function AdminCreateLogin() {
@@ -10,7 +10,8 @@ export default function AdminCreateLogin() {
   const [email, setEmail] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
-  const [password, setPassword] = useState('student123')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
@@ -60,7 +61,7 @@ export default function AdminCreateLogin() {
     setEmail('')
     setFirstName('')
     setLastName('')
-    setPassword('student123')
+    setPassword('')
   }
 
   return (
@@ -124,15 +125,25 @@ export default function AdminCreateLogin() {
           </div>
           <div>
             <label htmlFor="password-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Parol</label>
-            <input
-              id="password-input"
-              name="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              required
-            />
+            <div className="relative">
+              <input
+                id="password-input"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Parolni kiriting"
+                className="w-full px-4 py-2 pr-12 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
           <button
             type="submit"

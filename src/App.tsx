@@ -11,6 +11,7 @@ import AdminDashboard from '@/pages/admin/Dashboard'
 import AdminTeachers from '@/pages/admin/Teachers'
 import AdminGroups from '@/pages/admin/Groups'
 import AdminStudents from '@/pages/admin/Students'
+import AdminAttendance from '@/pages/admin/Attendance'
 import AdminLogins from '@/pages/admin/Logins'
 import AdminCreateLogin from '@/pages/admin/CreateLogin'
 import AdminMonthlyReports from '@/pages/admin/MonthlyReports'
@@ -81,6 +82,7 @@ export default function App() {
         <Route path="teachers" element={<AdminTeachers />} />
         <Route path="groups" element={<AdminGroups />} />
         <Route path="students" element={<AdminStudents />} />
+        <Route path="attendance" element={<AdminAttendance />} />
         <Route path="logins" element={<AdminLogins />} />
         <Route path="create-login" element={<AdminCreateLogin />} />
         <Route path="news" element={<AdminNews />} />

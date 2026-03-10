@@ -20,6 +20,7 @@ import {
   MoreHorizontal,
   ChevronDown,
   ChevronUp,
+  Calendar,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/hooks/useTheme'
@@ -31,6 +32,7 @@ const adminMainNav = [
   { to: '/admin/groups', icon: FolderKanban, label: 'Guruhlar' },
   { to: '/admin/students', icon: GraduationCap, label: 'O\'quvchilar' },
   { to: '/admin/news', icon: Mail, label: 'Yangiliklar' },
+  { to: '/admin/attendance', icon: Calendar, label: 'Davomat' },
   { to: '/admin/statistics', icon: BarChart3, label: 'Statistika' },
   { to: '/admin/payments', icon: DollarSign, label: 'To\'lovlar' },
 ]
