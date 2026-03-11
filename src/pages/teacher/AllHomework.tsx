@@ -46,40 +46,48 @@ export default function TeacherAllHomework() {
             <p className="text-gray-500 dark:text-gray-400">Uyga vazifalar yo'q</p>
           </div>
         ) : (
-          homework.map((hw) => (
-            <div
-              key={hw.id}
-              className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-lg transition-shadow"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    {hw.title}
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-300 mb-3">{hw.description}</p>
-                  <div className="flex flex-wrap gap-3 text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">
-                      O'quvchi: <span className="font-medium">{getStudentName(hw.student_id)}</span>
-                    </span>
-                    <span className="text-gray-500 dark:text-gray-400">
-                      Muddat: <span className="font-medium">{new Date(hw.due_date).toLocaleDateString('uz-UZ')}</span>
-                    </span>
+          homework.map((hw) => {
+            // Saqlangan ma'lumotlarni o'zgartirmasdan, is_completed va muddatdan kelib chiqib status hosil qilamiz
+            const now = new Date()
+            const due = new Date(hw.due_date)
+            const status: 'completed' | 'pending' | 'overdue' =
+              hw.is_completed ? 'completed' : due >= now ? 'pending' : 'overdue'
+
+            return (
+              <div
+                key={hw.id}
+                className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-lg transition-shadow"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                      {hw.title}
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-300 mb-3">{hw.description}</p>
+                    <div className="flex flex-wrap gap-3 text-sm">
+                      <span className="text-gray-500 dark:text-gray-400">
+                        O'quvchi: <span className="font-medium">{getStudentName(hw.student_id)}</span>
+                      </span>
+                      <span className="text-gray-500 dark:text-gray-400">
+                        Muddat: <span className="font-medium">{new Date(hw.due_date).toLocaleDateString('uz-UZ')}</span>
+                      </span>
+                    </div>
                   </div>
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ${
+                      status === 'completed'
+                        ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
+                        : status === 'pending'
+                        ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300'
+                        : 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300'
+                    }`}
+                  >
+                    {status === 'completed' ? 'Bajarildi' : status === 'pending' ? 'Kutilmoqda' : 'Kech qoldi'}
+                  </span>
                 </div>
-                <span
-                  className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ${
-                    hw.status === 'completed'
-                      ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
-                      : hw.status === 'pending'
-                      ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300'
-                      : 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300'
-                  }`}
-                >
-                  {hw.status === 'completed' ? 'Bajarildi' : hw.status === 'pending' ? 'Kutilmoqda' : 'Kech qoldi'}
-                </span>
               </div>
-            </div>
-          ))
+            )
+          })
         )}
       </div>
     </div>

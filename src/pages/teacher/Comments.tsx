@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { getStudentsByGroup, createComment, getCommentsByStudent, commentSuggestions } from '@/lib/data'
+import { createComment, getCommentsByStudent, commentSuggestions } from '@/lib/data'
 import { useAuth } from '@/context/AuthContext'
 import type { Profile, Comment } from '@/types'
 import { MessageSquare, ThumbsUp, ThumbsDown, Minus, Send } from 'lucide-react'
@@ -9,7 +9,6 @@ import toast from 'react-hot-toast'
 export default function TeacherComments() {
   const { studentId } = useParams<{ studentId: string }>()
   const { user } = useAuth()
-  const [student, setStudent] = useState<Profile | null>(null)
   const [comments, setComments] = useState<Comment[]>([])
   const [loading, setLoading] = useState(true)
   const [newComment, setNewComment] = useState('')
@@ -23,7 +22,7 @@ export default function TeacherComments() {
     // Find student from all groups (simplified for demo)
     // In real app, you'd have a direct getStudent function
     const loadStudent = async () => {
-      // This is a simplified approach - in real app you'd have better student lookup
+      // Bu demo versiyada o'quvchini alohida yuklamayapmiz, faqat loading flagni o'zgartiramiz
       setLoading(false)
     }
     
@@ -75,6 +74,14 @@ export default function TeacherComments() {
       case 'negative': return 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300'
       default: return 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary-500 border-t-transparent" />
+      </div>
+    )
   }
 
   return (

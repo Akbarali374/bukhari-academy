@@ -9,7 +9,7 @@ import {
   type DemoAuthUser,
 } from '@/lib/demoDb'
 
-const SUPABASE_ENABLED = !!import.meta.env.VITE_SUPABASE_URL
+const SUPABASE_ENABLED = !!(typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SUPABASE_URL)
 
 type AuthUser = { id: string; email: string; role: Role; profile: Profile }
 
