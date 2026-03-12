@@ -23,6 +23,9 @@ export default function AdminMonthlyReports() {
   const [sending, setSending] = useState(false)
   const [sentCount, setSentCount] = useState(0)
   const [selectedCategory, setSelectedCategory] = useState<GradeCategory>('hammasi')
+  // Fix: add state for emailConfig and showConfig
+  const [emailConfig, setEmailConfig] = useState(EMAIL_CONFIG)
+  const [showConfig, setShowConfig] = useState(false)
 
   useEffect(() => {
     loadStudentsWithStats()

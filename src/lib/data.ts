@@ -135,6 +135,7 @@ export async function createStudent(
   return profile as Profile
 }
 
+// Update profile (teacher/student)
 export async function updateProfile(id: string, data: Partial<Pick<Profile, 'first_name' | 'last_name' | 'email'>>): Promise<Profile | { error: string }> {
   if (!SUPABASE_ENABLED || !supabase) {
     try {
