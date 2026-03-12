@@ -14,7 +14,6 @@ import AdminStudents from '@/pages/admin/Students'
 import AdminAttendance from '@/pages/admin/Attendance'
 import AdminLogins from '@/pages/admin/Logins'
 import AdminCreateLogin from '@/pages/admin/CreateLogin'
-import AdminMonthlyReports from '@/pages/admin/MonthlyReports'
 import AdminStatistics from '@/pages/admin/Statistics'
 import AdminPayments from '@/pages/admin/Payments'
 import AdminAISettings from '@/pages/admin/AISettings'
@@ -89,7 +88,6 @@ export default function App() {
         <Route path="statistics" element={<AdminStatistics />} />
         <Route path="payments" element={<AdminPayments />} />
         <Route path="ai-settings" element={<AdminAISettings />} />
-        <Route path="monthly-reports" element={<AdminMonthlyReports />} />
       </Route>
       <Route
         path="/teacher/*"
