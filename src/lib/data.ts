@@ -469,6 +469,21 @@ export async function deleteProfile(profileId: string): Promise<void> {
   if (error) throw new Error(error.message)
 }
 
+// New: delete group
+export async function deleteGroup(groupId: string): Promise<void> {
+  if (!SUPABASE_ENABLED || !supabase) {
+    const db = await globalDb.loadDatabase()
+    // Remove the group
+    db.groups = db.groups.filter(g => g.id !== groupId)
+    // Unassign students that belonged to this group
+    db.profiles = db.profiles.map(p => (p.role === 'student' && p.group_id === groupId) ? { ...p, group_id: null } : p)
+    await globalDb.saveToLocal(db)
+    return
+  }
+  const { error } = await supabase.from('groups').delete().eq('id', groupId)
+  if (error) throw new Error(error.message)
+}
+
 export async function deleteGrade(gradeId: string): Promise<void> {
   if (!SUPABASE_ENABLED || !supabase) {
     const db = await globalDb.loadDatabase()

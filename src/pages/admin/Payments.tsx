@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getStudents } from '@/lib/data'
+import { EMAIL_CONFIG } from '@/lib/emailConfig'
 import type { Profile, Payment } from '@/types'
 import { DollarSign, CheckCircle, XCircle, AlertCircle, Calendar, Plus, Edit, Trash2, Mail } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -125,15 +126,13 @@ export default function AdminPayments() {
   }
 
   const sendPaymentReminder = async (student: Profile) => {
-    // EmailJS config
-    const emailConfig = localStorage.getItem('emailjs_config')
-    if (!emailConfig) {
-      toast.error('EmailJS sozlanmagan! Avval "Oylik hisobotlar" sahifasida sozlang.')
+    // EmailJS config koddan olinadi
+    if (!EMAIL_CONFIG.serviceId || !EMAIL_CONFIG.templateId || !EMAIL_CONFIG.publicKey) {
+      toast.error('Email sozlamalari kiritilmagan. lib/emailConfig.ts faylini to\'ldiring.')
       return
     }
 
     try {
-      const config = JSON.parse(emailConfig)
       const payment = getPaymentForStudent(student.id, selectedMonth)
       const amount = payment?.amount || 500000
       const paidAmount = payment?.paid_amount || 0
@@ -143,9 +142,9 @@ export default function AdminPayments() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          service_id: config.serviceId,
-          template_id: config.templateId,
-          user_id: config.publicKey,
+          service_id: EMAIL_CONFIG.serviceId,
+          template_id: EMAIL_CONFIG.templateId,
+          user_id: EMAIL_CONFIG.publicKey,
           template_params: {
             to_email: student.email,
             to_name: `${student.first_name} ${student.last_name}`,

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getGroupsWithTeacher, getTeachers, createGroup } from '@/lib/data'
+import { getGroupsWithTeacher, getTeachers, createGroup, deleteGroup } from '@/lib/data'
 import type { Group, Profile } from '@/types'
 import { FolderPlus } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -36,6 +36,17 @@ export default function AdminGroups() {
     setSubmitting(false)
   }
 
+  async function handleDeleteGroup(id: string) {
+    if (!confirm('Guruhni o\'chirmoqchimisiz? Bu amalni qaytarib bo\'lmaydi.')) return
+    try {
+      await deleteGroup(id)
+      toast.success('Guruh o\'chirildi')
+      load()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Xatolik')
+    }
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -54,6 +65,7 @@ export default function AdminGroups() {
                 <th className="text-left px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300">Guruh nomi</th>
                 <th className="text-left px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300">Ustoz</th>
                 <th className="text-left px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300">Oquvchilar</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300">Amallar</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -62,6 +74,15 @@ export default function AdminGroups() {
                   <td className="px-4 py-3 text-gray-900 dark:text-white font-medium">{g.name}</td>
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{g.teacher ? g.teacher.last_name + ' ' + g.teacher.first_name : '—'}</td>
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{g.students_count ?? 0}</td>
+                  <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteGroup(g.id)}
+                      className="px-3 py-1 rounded-md bg-red-600 hover:bg-red-700 text-white text-sm"
+                    >
+                      O'chirish
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

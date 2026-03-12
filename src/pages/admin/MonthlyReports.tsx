@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { globalDb } from '@/lib/globalDb'
+import { EMAIL_CONFIG } from '@/lib/emailConfig'
 import type { Profile, Grade } from '@/types'
 import { Mail, Send, User, Award } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -22,43 +23,9 @@ export default function AdminMonthlyReports() {
   const [sending, setSending] = useState(false)
   const [sentCount, setSentCount] = useState(0)
   const [selectedCategory, setSelectedCategory] = useState<GradeCategory>('hammasi')
-  const [emailConfig, setEmailConfig] = useState({
-    serviceId: '',
-    templateId: '',
-    publicKey: '',
-    fromEmail: 'bukhariacademy256@gmail.com'
-  })
-  const [showConfig, setShowConfig] = useState(false)
 
   useEffect(() => {
     loadStudentsWithStats()
-    
-    // EmailJS konfiguratsiyasini localStorage'dan yuklash
-    const saved = localStorage.getItem('emailjs_config')
-    if (saved) {
-      try {
-        const config = JSON.parse(saved)
-        setEmailConfig(config)
-        // Agar config saqlangan bo'lsa, sozlamalarni ko'rsatish
-        if (config.serviceId && config.serviceId !== 'service_xxxxxxx') {
-          setShowConfig(false) // Sozlangan bo'lsa yopiq tursin
-        } else {
-          setShowConfig(true) // Sozlanmagan bo'lsa ochiq tursin
-        }
-      } catch (error) {
-        console.error('Config parse error:', error)
-        setShowConfig(true)
-      }
-    } else {
-      // Default qiymatlar - sizning EmailJS hisobingiz
-      setEmailConfig({
-        fromEmail: 'bukhariacademy256@gmail.com',
-        serviceId: 'service_xxxxxxx', // Bu yerga o'zingizning Service ID ni kiriting
-        templateId: 'template_xxxxxxx', // Bu yerga o'zingizning Template ID ni kiriting
-        publicKey: 'xxxxxxxxxxxxxxxx' // Bu yerga o'zingizning Public Key ni kiriting
-      })
-      setShowConfig(true) // Default bo'lsa ochiq tursin
-    }
   }, [])
 
   async function loadStudentsWithStats() {
@@ -127,12 +94,6 @@ export default function AdminMonthlyReports() {
     ))
   }
 
-  const saveConfig = () => {
-    localStorage.setItem('emailjs_config', JSON.stringify(emailConfig))
-    toast.success('Sozlamalar saqlandi!')
-    setShowConfig(false)
-  }
-
   async function sendEmailViaAPI(studentEmail: string, studentName: string, average: number, percentage: number, gradesCount: number, maxGrade: number) {
     try {
       const now = new Date()
@@ -167,15 +128,15 @@ ${emailConfig.fromEmail}`
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          service_id: emailConfig.serviceId,
-          template_id: emailConfig.templateId,
-          user_id: emailConfig.publicKey,
+          service_id: EMAIL_CONFIG.serviceId,
+          template_id: EMAIL_CONFIG.templateId,
+          user_id: EMAIL_CONFIG.publicKey,
           template_params: {
             to_email: studentEmail,
             to_name: studentName,
             message: reportText,
             from_name: 'Bukhari Academy',
-            from_email: emailConfig.fromEmail,
+            from_email: EMAIL_CONFIG.fromEmail,
             subject: `${month} ${year} - Oylik hisobot`
           }
         })
@@ -201,9 +162,13 @@ ${emailConfig.fromEmail}`
       return
     }
 
-    if (!emailConfig.serviceId || !emailConfig.templateId || !emailConfig.publicKey) {
-      toast.error('Avval EmailJS sozlamalarini kiriting!')
-      setShowConfig(true)
+    if (
+      !EMAIL_CONFIG.serviceId ||
+      !EMAIL_CONFIG.templateId ||
+      !EMAIL_CONFIG.publicKey ||
+      EMAIL_CONFIG.serviceId.startsWith('service_') === false && EMAIL_CONFIG.serviceId === 'service_bukhari_gmail' === false
+    ) {
+      toast.error('EmailJS ID larini koddan to\'ldiring: lib/emailConfig.ts')
       return
     }
 

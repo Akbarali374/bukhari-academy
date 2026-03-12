@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { globalDb } from '@/lib/globalDb'
+import { deleteProfile } from '@/lib/data'
 import type { Profile } from '@/types'
 import { UserPlus, Eye, EyeOff } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -40,7 +41,7 @@ export default function AdminTeachers() {
       
       if (existingUser) {
         console.log('❌ Email mavjud:', email)
-        toast.error(`❌ Bu email allaqachon mavjud: ${email}`, {
+        toast.error(`❌ Bu email allaqon mavjud: ${email}`, {
           duration: 4000,
           style: {
             background: '#ef4444',
@@ -94,6 +95,17 @@ export default function AdminTeachers() {
     setSubmitting(false)
   }
 
+  async function handleDeleteTeacher(id: string) {
+    if (!confirm('Ustozni o\'chirmoqchimisiz? Bu amalni qaytarib bo\'lmaydi.')) return
+    try {
+      await deleteProfile(id)
+      toast.success('Ustoz o\'chirildi')
+      await load()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Xatolik')
+    }
+  }
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -121,6 +133,7 @@ export default function AdminTeachers() {
                 <tr>
                   <th className="text-left px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300">F.I.O</th>
                   <th className="text-left px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300">Email</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300">Amallar</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -128,6 +141,17 @@ export default function AdminTeachers() {
                   <tr key={t.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
                     <td className="px-4 py-3 text-gray-900 dark:text-white">{t.last_name} {t.first_name}</td>
                     <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{t.email}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteTeacher(t.id)}
+                          className="px-3 py-1 rounded-md bg-red-600 hover:bg-red-700 text-white text-sm"
+                        >
+                          O'chirish
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -146,6 +170,9 @@ export default function AdminTeachers() {
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
                     <p className="text-gray-600 dark:text-gray-300">{t.email}</p>
+                  </div>
+                  <div className="pt-2">
+                    <button onClick={() => handleDeleteTeacher(t.id)} className="px-3 py-1 rounded-md bg-red-600 hover:bg-red-700 text-white text-sm">O'chirish</button>
                   </div>
                 </div>
               </div>
