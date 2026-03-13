@@ -94,7 +94,7 @@ export default function AdminStudents() {
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {filtered.map((s) => (
                 <tr key={s.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                  <td className="px-4 py-3 text-gray-900 dark:text-white">{s.last_name} {s.first_name}</td>
+                  <td className="px-4 py-3 text-gray-900 dark:text-white max-w-[180px] truncate">{s.last_name} {s.first_name}</td>
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{s.email}</td>
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{getGroupName(s.group_id)}</td>
                   <td className="px-4 py-3 text-right">

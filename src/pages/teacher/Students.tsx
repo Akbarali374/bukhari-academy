@@ -51,6 +51,11 @@ export default function TeacherStudents() {
           </Link>
         </div>
       </div>
+      <div className="mb-4">
+        <Link to="/teacher/exam-results" className="px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-medium">
+          Imtihon javoblari
+        </Link>
+      </div>
       {loading ? (
         <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-2 border-primary-500 border-t-transparent" /></div>
       ) : (

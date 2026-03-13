@@ -59,7 +59,7 @@ export default function AdminGroups() {
         <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-2 border-primary-500 border-t-transparent" /></div>
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <table className="w-full">
+          <table className="w-full hidden md:table">
             <thead className="bg-gray-50 dark:bg-gray-700/50">
               <tr>
                 <th className="text-left px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300">Guruh nomi</th>
@@ -90,6 +90,34 @@ export default function AdminGroups() {
           {groups.length === 0 && <p className="text-center py-8 text-gray-500 dark:text-gray-400">Guruhlar yoq</p>}
         </div>
       )}
+      {/* Mobile Cards */}
+      <div className="md:hidden divide-y divide-gray-200 dark:divide-gray-700">
+        {groups.map((g) => (
+          <div key={g.id} className="p-4 flex flex-col gap-2">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Guruh nomi</p>
+                <p className="text-gray-900 dark:text-white font-medium">{g.name}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleDeleteGroup(g.id)}
+                className="px-3 py-1 rounded-md bg-red-600 hover:bg-red-700 text-white text-sm"
+              >
+                O'chirish
+              </button>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Ustoz</p>
+              <p className="text-gray-600 dark:text-gray-300">{g.teacher ? g.teacher.last_name + ' ' + g.teacher.first_name : '—'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Oquvchilar</p>
+              <p className="text-gray-600 dark:text-gray-300">{g.students_count ?? 0}</p>
+            </div>
+          </div>
+        ))}
+      </div>
       {modal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6">

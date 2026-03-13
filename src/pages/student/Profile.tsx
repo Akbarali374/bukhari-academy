@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { updateProfile } from '@/lib/data'
 import toast from 'react-hot-toast'
+import { Link } from 'react-router-dom'
 
 export default function StudentProfile() {
   const { user, refreshProfile } = useAuth()
@@ -55,6 +56,11 @@ export default function StudentProfile() {
             {saving ? 'Saqlanmoqda...' : 'Saqlash'}
           </button>
         </form>
+        <div className="mt-4">
+          <Link to="/student/exam-results" className="block text-center px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-medium">
+            Imtihon javoblari
+          </Link>
+        </div>
       </div>
     </div>
   )
