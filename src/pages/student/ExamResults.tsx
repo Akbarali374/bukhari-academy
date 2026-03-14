@@ -39,29 +39,31 @@ export default function StudentExamResults() {
         <div className="flex justify-center py-12">
           <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary-500 border-t-transparent" />
         </div>
-      ) : examResults.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 dark:text-gray-400">Imtihon javobi kutilmoqda</div>
       ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-700/50">
-              <tr>
-                <th className="text-left px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300">Sana</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300">Ball</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300">Foiz</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {examResults.map((res, idx) => (
-                <tr key={idx}>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{res.date}</td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{res.ball ?? Math.round(res.percent)}</td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{res.percent}%</td>
+        examResults.length === 0 ? (
+          <div className="text-center py-12 text-gray-500 dark:text-gray-400">Imtihon javobi kutilmoqda</div>
+        ) : (
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-gray-50 dark:bg-gray-700/50">
+                <tr>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300">Sana</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300">Ball</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300">Foiz</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                {examResults.map((res, idx) => (
+                  <tr key={idx}>
+                    <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{res.date}</td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{res.ball ?? Math.round(res.percent)}</td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{res.percent}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
       )}
     </div>
   );
