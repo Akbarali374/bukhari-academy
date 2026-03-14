@@ -17,6 +17,10 @@ export default function TeacherExamResults() {
   const [examResults, setExamResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // New: Add exam result form
+  const [newResult, setNewResult] = useState({ studentId: '', date: '', ball: '', percent: '' });
+  const [saving, setSaving] = useState(false);
+
   useEffect(() => {
     async function load() {
       setLoading(true);
@@ -28,6 +32,25 @@ export default function TeacherExamResults() {
     load();
   }, []);
 
+  function handleInputChange(e) {
+    setNewResult({ ...newResult, [e.target.name]: e.target.value });
+  }
+
+  async function handleSaveResult(e) {
+    e.preventDefault();
+    setSaving(true);
+    // TODO: Save to backend API
+    // For now, add to local state
+    setExamResults(prev => [...prev, {
+      studentId: newResult.studentId,
+      date: newResult.date,
+      ball: Number(newResult.ball),
+      percent: Number(newResult.percent)
+    }]);
+    setNewResult({ studentId: '', date: '', ball: '', percent: '' });
+    setSaving(false);
+  }
+
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Imtihon javoblari (ball va foiz)</h1>
@@ -36,7 +59,19 @@ export default function TeacherExamResults() {
           <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary-500 border-t-transparent" />
         </div>
       ) : examResults.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 dark:text-gray-400">Hozircha imtihon bo'lmagan</div>
+        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+          Hozircha imtihon bo'lmagan
+          <form onSubmit={handleSaveResult} className="mt-6 max-w-md mx-auto bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col gap-3">
+            <select name="studentId" value={newResult.studentId} onChange={handleInputChange} className="px-3 py-2 rounded border" required>
+              <option value="">O'quvchini tanlang</option>
+              {students.map(s => <option key={s.id} value={s.id}>{s.last_name} {s.first_name}</option>)}
+            </select>
+            <input name="date" type="date" value={newResult.date} onChange={handleInputChange} className="px-3 py-2 rounded border" required />
+            <input name="ball" type="number" min="0" max="100" value={newResult.ball} onChange={handleInputChange} className="px-3 py-2 rounded border" placeholder="Ball (masalan, 85)" required />
+            <input name="percent" type="number" min="0" max="100" value={newResult.percent} onChange={handleInputChange} className="px-3 py-2 rounded border" placeholder="Foiz (masalan, 85)" required />
+            <button type="submit" disabled={saving} className="bg-primary-600 hover:bg-primary-700 text-white rounded py-2 font-medium disabled:opacity-50">{saving ? 'Saqlanmoqda...' : 'Saqlash'}</button>
+          </form>
+        </div>
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <table className="w-full">

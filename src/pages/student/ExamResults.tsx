@@ -40,7 +40,7 @@ export default function StudentExamResults() {
           <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary-500 border-t-transparent" />
         </div>
       ) : examResults.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 dark:text-gray-400">Hozircha imtihon bo'lmagan</div>
+        <div className="text-center py-12 text-gray-500 dark:text-gray-400">Imtihon javobi kutilmoqda</div>
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <table className="w-full">
