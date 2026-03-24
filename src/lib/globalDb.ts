@@ -380,6 +380,32 @@ class GlobalDatabaseService {
     }
   }
 
+  // Exam Results (imtihon natijalari)
+  async addExamResult(student_id: string, ball: string, percent: string, grade: string): Promise<void> {
+    const db = await this.loadDatabase();
+    db.testResults = db.testResults || [];
+    db.testResults.push({
+      id: `exam-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+      attempt_id: '', // yoki kerakli qiymat
+      student_id,
+      level: 'beginner', // yoki kerakli qiymat
+      score: Number(ball),
+      percentage: Number(percent),
+      grade,
+      created_at: new Date().toISOString()
+    });
+    await this.saveToLocal(db);
+  }
+
+  async getExamResults(student_id?: string): Promise<TestResult[]> {
+    const db = await this.loadDatabase();
+    if (!db.testResults) return [];
+    if (student_id) {
+      return db.testResults.filter((r: any) => r.student_id === student_id);
+    }
+    return db.testResults;
+  }
+
   // Delete functions
   async deleteNews(newsId: string): Promise<void> {
     const db = await this.loadDatabase()
