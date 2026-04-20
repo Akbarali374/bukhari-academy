@@ -25,6 +25,7 @@ import TeacherAttendance from '@/pages/teacher/Attendance'
 import TeacherAllAttendance from '@/pages/teacher/AllAttendance'
 import TeacherHomework from '@/pages/teacher/Homework'
 import TeacherAllHomework from '@/pages/teacher/AllHomework'
+import TeacherSendExam from '@/pages/teacher/SendExam'
 import StudentProfile from '@/pages/student/Profile'
 import StudentGrades from '@/pages/student/Grades'
 import StudentTests from '@/pages/student/Tests'
@@ -32,6 +33,7 @@ import StudentAttendance from '@/pages/student/Attendance'
 import AdminNews from '@/pages/admin/News'
 import StudentNews from '@/pages/student/News'
 import StudentHomework from '@/pages/student/Homework'
+import StudentExams from '@/pages/student/Exams'
 
 function PrivateRoute({ children, allowed }: { children: React.ReactNode; allowed: string[] }) {
   const { user, loading } = useAuth()
@@ -106,6 +108,7 @@ export default function App() {
         <Route path="attendance/:groupId" element={<TeacherAttendance />} />
         <Route path="homework" element={<TeacherAllHomework />} />
         <Route path="homework/:groupId" element={<TeacherHomework />} />
+        <Route path="exam/:groupId" element={<TeacherSendExam />} />
       </Route>
       <Route
         path="/student/*"
@@ -122,6 +125,7 @@ export default function App() {
         <Route path="tests" element={<StudentTests />} />
         <Route path="homework" element={<StudentHomework />} />
         <Route path="attendance" element={<StudentAttendance />} />
+        <Route path="exams" element={<StudentExams />} />
       </Route>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="*" element={<Navigate to="/login" replace />} />

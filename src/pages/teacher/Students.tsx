@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { getStudentsByGroup, getGroups } from '@/lib/data'
 import type { Profile } from '@/types'
 import type { Group } from '@/types'
-import { ArrowLeft, Award, Users, BookOpen } from 'lucide-react'
+import { ArrowLeft, Award, Users, BookOpen, ClipboardList } from 'lucide-react'
 
 export default function TeacherStudents() {
   const { groupId } = useParams<{ groupId: string }>()
@@ -48,6 +48,13 @@ export default function TeacherStudents() {
           >
             <BookOpen className="w-5 h-5" />
             Uyga vazifalar
+          </Link>
+          <Link 
+            to={`/teacher/exam/${groupId}`}
+            className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-medium"
+          >
+            <ClipboardList className="w-5 h-5" />
+            Imtihon natijalari
           </Link>
         </div>
       </div>

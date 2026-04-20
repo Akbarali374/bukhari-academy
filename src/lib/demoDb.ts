@@ -1,4 +1,4 @@
-import type { Profile, Group, Grade, Role, News, Homework, Comment } from '@/types'
+import type { Profile, Group, Grade, Role, News, Homework, Comment, Exam, ExamGrade } from '@/types'
 
 const PROFILES_KEY = 'bukhari_profiles'
 const GROUPS_KEY = 'bukhari_groups'
@@ -6,6 +6,7 @@ const GRADES_KEY = 'bukhari_grades'
 const NEWS_KEY = 'bukhari_news'
 const HOMEWORK_KEY = 'bukhari_homework'
 const COMMENTS_KEY = 'bukhari_comments'
+const EXAMS_KEY = 'bukhari_exams'
 const AUTH_KEY = 'bukhari_auth'
 
 const defaultAdmin: Profile = {
@@ -137,6 +138,15 @@ function getComments(): Comment[] {
 
 function setComments(comments: Comment[]) {
   localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments))
+}
+
+function getExams(): Exam[] {
+  const raw = localStorage.getItem(EXAMS_KEY)
+  return raw ? JSON.parse(raw) : []
+}
+
+function setExams(exams: Exam[]) {
+  localStorage.setItem(EXAMS_KEY, JSON.stringify(exams))
 }
 
 export interface DemoAuthUser {
@@ -317,5 +327,26 @@ export const demoDb = {
   },
   getPassword(profileId: string): string {
     return localStorage.getItem(`bukhari_pwd_${profileId}`) || 'student123'
+  },
+  // Exam functions
+  getExams,
+  setExams,
+  createExam(data: Omit<Exam, 'id' | 'created_at' | 'updated_at'>) {
+    const exams = getExams()
+    const id = `exam-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+    const now = new Date().toISOString()
+    const newExam: Exam = { ...data, id, created_at: now, updated_at: now }
+    setExams([...exams, newExam])
+    return newExam
+  },
+  getExamsByStudent(student_id: string) {
+    return getExams()
+      .filter(e => e.student_id === student_id)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  },
+  getExamsByTeacher(teacher_id: string) {
+    return getExams()
+      .filter(e => e.teacher_id === teacher_id)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   }
 }

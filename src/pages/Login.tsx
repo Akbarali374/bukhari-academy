@@ -6,7 +6,7 @@ import { Sun, Moon, Eye, EyeOff } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function Login() {
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -21,17 +21,31 @@ export default function Login() {
     }
   }, [user, navigate])
 
+  // Username ni email formatiga o'tkazish
+  function toEmail(input: string): string {
+    const trimmed = input.trim().toLowerCase()
+    // Agar @ belgisi bo'lsa, to'g'ridan-to'g'ri ishlatamiz
+    if (trimmed.includes('@')) return trimmed
+    // Aks holda @bukhari.uz qo'shamiz
+    return `${trimmed}@bukhari.uz`
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!username.trim()) {
+      toast.error('Login kiriting')
+      return
+    }
     setLoading(true)
-    const result = await login(email.trim(), password)
+    const email = toEmail(username)
+    const result = await login(email, password)
     setLoading(false)
     if (result.ok && result.role) {
       toast.success('Tizimga kirdingiz')
       const to = result.role === 'admin' ? '/admin' : result.role === 'teacher' ? '/teacher' : '/student'
       navigate(to, { replace: true })
     } else if (!result.ok) {
-      toast.error(result.error ?? 'Xatolik')
+      toast.error('Login yoki parol noto\'g\'ri')
     }
   }
 
@@ -47,11 +61,10 @@ export default function Login() {
       </button>
 
       <div className="w-full max-w-md">
-        {/* Logo va xush kelibsiz */}
-        <div className="text-center mb-8 animate-fadeIn">
-          {/* Logo */}
+        {/* Logo */}
+        <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
-            <div className="relative animate-scaleIn">
+            <div className="relative">
               <div className="w-32 h-32 rounded-full bg-white dark:bg-gray-800 shadow-2xl flex items-center justify-center border-4 border-green-500 hover:scale-110 transition-transform duration-300">
                 <div className="text-center">
                   <div className="text-4xl font-bold text-green-600 dark:text-green-400">BA</div>
@@ -59,45 +72,43 @@ export default function Login() {
                   <div className="text-[10px] text-green-500 dark:text-green-500">ACADEMY</div>
                 </div>
               </div>
-              {/* Ruchka ushlab turgan bola emoji */}
-              <div className="absolute -bottom-2 -right-2 text-4xl animate-bounce">
-                ✍️
-              </div>
+              <div className="absolute -bottom-2 -right-2 text-4xl animate-bounce">✍️</div>
             </div>
           </div>
-
-          {/* Xush kelibsiz xabari */}
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 animate-slideIn">
-            Bukhari Academy
-          </h1>
-          <p className="text-lg text-green-600 dark:text-green-400 font-medium mb-1 animate-slideIn" style={{ animationDelay: '0.1s' }}>
-            Kundaligingizga xush kelibsiz! 📚
-          </p>
-          <p className="text-sm text-gray-600 dark:text-gray-400 animate-slideIn" style={{ animationDelay: '0.2s' }}>
-            Zamonaviy ta'lim platformasi
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Bukhari Academy</h1>
+          <p className="text-lg text-green-600 dark:text-green-400 font-medium mb-1">Kundaligingizga xush kelibsiz! 📚</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Zamonaviy ta'lim platformasi</p>
         </div>
 
         {/* Login forma */}
         <form
           onSubmit={handleSubmit}
-          className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-8 space-y-5 animate-scaleIn hover:shadow-3xl transition-shadow duration-300"
-          style={{ animationDelay: '0.3s' }}
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-8 space-y-5"
         >
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              📧 Email
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              👤 Login
             </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="email@example.com"
-              className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
-              required
-            />
+            <div className="relative">
+              <input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="loginингизни киринг"
+                autoComplete="username"
+                autoCapitalize="none"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                required
+              />
+            </div>
+            {username && !username.includes('@') && (
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 ml-1">
+                → {username.trim().toLowerCase()}@bukhari.uz
+              </p>
+            )}
           </div>
+
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               🔒 Parol
@@ -109,6 +120,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
+                autoComplete="current-password"
                 className="w-full px-4 py-3 pr-12 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
                 required
               />
@@ -121,6 +133,7 @@ export default function Login() {
               </button>
             </div>
           </div>
+
           <button
             type="submit"
             disabled={loading}
@@ -137,7 +150,6 @@ export default function Login() {
           </button>
         </form>
 
-        {/* Footer */}
         <div className="mt-6 text-center">
           <p className="text-xs text-gray-500 dark:text-gray-400">
             © 2024 Bukhari Academy. Barcha huquqlar himoyalangan.

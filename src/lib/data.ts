@@ -1,8 +1,9 @@
 /// <reference types="vite/client" />
 
-import type { Profile, Group, Grade, News, Homework, Comment, Attendance } from '@/types'
+import type { Profile, Group, Grade, News, Homework, Comment, Exam } from '@/types'
 import { supabase } from './supabase'
 import { globalDb } from './globalDb'
+import { demoDb } from './demoDb'
 
 const SUPABASE_ENABLED = !!(typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_SUPABASE_URL)
 
@@ -494,4 +495,37 @@ export async function deleteGrade(gradeId: string): Promise<void> {
   }
   const { error } = await supabase.from('grades').delete().eq('id', gradeId)
   if (error) throw new Error(error.message)
+}
+
+// Exam functions
+export function calcExamGrade(score: number, maxScore: number): import('@/types').ExamGrade {
+  const percent = (score / maxScore) * 100
+  if (percent >= 86) return 'alo'
+  if (percent >= 71) return 'yaxshi'
+  if (percent >= 56) return 'qoniqarli'
+  return 'qoniqarsiz'
+}
+
+export const MONTHS = [
+  'Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun',
+  'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'
+]
+
+export async function createExam(data: Omit<Exam, 'id' | 'created_at' | 'updated_at'>): Promise<Exam> {
+  if (!SUPABASE_ENABLED || !supabase) return demoDb.createExam(data)
+  const { data: result, error } = await supabase.from('exams').insert(data).select().single()
+  if (error) throw new Error(error.message)
+  return result as Exam
+}
+
+export async function getExamsByStudent(student_id: string): Promise<Exam[]> {
+  if (!SUPABASE_ENABLED || !supabase) return demoDb.getExamsByStudent(student_id)
+  const { data } = await supabase.from('exams').select('*').eq('student_id', student_id).order('created_at', { ascending: false })
+  return (data ?? []) as Exam[]
+}
+
+export async function getExamsByTeacher(teacher_id: string): Promise<Exam[]> {
+  if (!SUPABASE_ENABLED || !supabase) return demoDb.getExamsByTeacher(teacher_id)
+  const { data } = await supabase.from('exams').select('*').eq('teacher_id', teacher_id).order('created_at', { ascending: false })
+  return (data ?? []) as Exam[]
 }

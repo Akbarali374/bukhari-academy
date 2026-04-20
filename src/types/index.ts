@@ -70,6 +70,25 @@ export interface Comment {
   teacher?: Profile
 }
 
+export type ExamGrade = 'alo' | 'yaxshi' | 'qoniqarli' | 'qoniqarsiz'
+
+export interface Exam {
+  id: string
+  student_id: string
+  teacher_id: string
+  title: string
+  month: string
+  year: number
+  max_score: number
+  score: number
+  grade: ExamGrade
+  comment: string | null
+  created_at: string
+  updated_at: string
+  student?: Profile
+  teacher?: Profile
+}
+
 export interface Attendance {
   id: string
   student_id: string
