@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-import type { Profile, Group, Grade, News, Homework, Comment, Exam } from '@/types'
+import type { Profile, Group, Grade, News, Homework, Comment, Exam, Attendance } from '@/types'
 import { supabase } from './supabase'
 import { globalDb } from './globalDb'
 import { demoDb } from './demoDb'

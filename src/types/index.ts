@@ -96,6 +96,18 @@ export interface Attendance {
   date: string
   status: 'keldi' | 'kelmadi'
   created_at: string
+  updated_at: string
+  student?: Profile
+  teacher?: Profile
+}
+
+export interface Attendance {
+  id: string
+  student_id: string
+  teacher_id: string
+  date: string
+  status: 'keldi' | 'kelmadi'
+  created_at: string
   student?: Profile
   teacher?: Profile
 }
