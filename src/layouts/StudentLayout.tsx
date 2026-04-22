@@ -3,12 +3,14 @@ import { Outlet, NavLink } from 'react-router-dom'
 import { useTheme } from '@/hooks/useTheme'
 import { useAuth } from '@/context/AuthContext'
 import { useUnreadNews } from '@/hooks/useUnreadNews'
+import { useUnreadExams } from '@/hooks/useUnreadExams'
 import { User, Award, Moon, Sun, LogOut, Menu, X, Newspaper, BookOpen, FileText, ClipboardList } from 'lucide-react'
 
 export default function StudentLayout() {
   const { theme, toggleTheme } = useTheme()
   const { user, logout } = useAuth()
   const { unreadCount } = useUnreadNews()
+  const { unreadCount: unreadExams, markAllSeen } = useUnreadExams()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const toggleMobileMenu = () => {
@@ -147,6 +149,21 @@ export default function StudentLayout() {
                 Baholar
               </NavLink>
               <NavLink
+                to="/student/exams"
+                onClick={() => { closeMobileMenu(); markAllSeen() }}
+                className={({ isActive }) =>
+                  `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium relative ${
+                    isActive ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`
+                }
+              >
+                <ClipboardList className="w-4 h-4" />
+                Imtihon natijalari
+                {unreadExams > 0 && (
+                  <span className="ml-auto w-2.5 h-2.5 bg-red-500 rounded-full" />
+                )}
+              </NavLink>
+              <NavLink
                 to="/student/homework"
                 onClick={closeMobileMenu}
                 className={({ isActive }) =>
@@ -265,6 +282,24 @@ export default function StudentLayout() {
           >
             <Award className="w-6 h-6" />
             <span className="text-xs font-medium">Baholar</span>
+          </NavLink>
+          
+          <NavLink
+            to="/student/exams"
+            onClick={markAllSeen}
+            className={({ isActive }) =>
+              `flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors relative ${
+                isActive
+                  ? 'text-green-600 dark:text-green-400'
+                  : 'text-gray-500 dark:text-gray-400'
+              }`
+            }
+          >
+            <ClipboardList className="w-6 h-6" />
+            <span className="text-xs font-medium">Imtihon</span>
+            {unreadExams > 0 && (
+              <span className="absolute top-1 right-1/4 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-gray-900" />
+            )}
           </NavLink>
           
           <NavLink
