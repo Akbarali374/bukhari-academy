@@ -1,4 +1,4 @@
-import type { Profile, Group, Grade, News, Homework, Comment, Attendance, Payment, TestQuestion, TestAttempt, TestResult } from '@/types'
+import type { Profile, Group, Grade, News, Homework, Comment, Attendance, Payment, TestQuestion, TestAttempt, TestResult, Exam } from '@/types'
 
 interface GlobalDatabase {
   profiles: Profile[]
@@ -8,6 +8,7 @@ interface GlobalDatabase {
   homework: Homework[]
   comments: Comment[]
   attendance: Attendance[]
+  exams: Exam[]
   payments: Payment[]
   testQuestions: TestQuestion[]
   testAttempts: TestAttempt[]
@@ -129,6 +130,7 @@ class GlobalDatabaseService {
       homework: [],
       comments: [],
       attendance: [],
+      exams: [],
       payments: [],
       testQuestions: [],
       testAttempts: [],
@@ -220,6 +222,21 @@ class GlobalDatabaseService {
 
   // Login function
   async login(email: string, password: string): Promise<Profile | null> {
+    // Admin uchun hardcoded tekshiruv
+    if (email === 'admin@bukhari.uz' && password === 'admin.sanobarhon.2003') {
+      const adminProfile: Profile = {
+        id: 'admin-1',
+        email: 'admin@bukhari.uz',
+        first_name: 'Admin',
+        last_name: 'Bukhari',
+        role: 'admin',
+        group_id: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+      return adminProfile
+    }
+
     const db = await this.loadDatabase()
     const profile = db.profiles.find(p => p.email === email)
     
@@ -407,6 +424,34 @@ class GlobalDatabaseService {
       return db.testResults.filter((r: any) => r.student_id === student_id);
     }
     return db.testResults;
+  }
+
+  // Exam functions
+  async createExam(data: Omit<Exam, 'id' | 'created_at' | 'updated_at'>): Promise<Exam> {
+    const db = await this.loadDatabase()
+    if (!db.exams) db.exams = []
+    const id = `exam-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+    const now = new Date().toISOString()
+    const newExam: Exam = { ...data, id, created_at: now, updated_at: now }
+    db.exams.push(newExam)
+    await this.saveToLocal(db)
+    return newExam
+  }
+
+  async getExamsByStudent(student_id: string): Promise<Exam[]> {
+    const db = await this.loadDatabase()
+    if (!db.exams) return []
+    return db.exams
+      .filter(e => e.student_id === student_id)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  }
+
+  async getExamsByTeacher(teacher_id: string): Promise<Exam[]> {
+    const db = await this.loadDatabase()
+    if (!db.exams) return []
+    return db.exams
+      .filter(e => e.teacher_id === teacher_id)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   }
 
   // Delete functions

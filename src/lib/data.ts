@@ -512,20 +512,20 @@ export const MONTHS = [
 ]
 
 export async function createExam(data: Omit<Exam, 'id' | 'created_at' | 'updated_at'>): Promise<Exam> {
-  if (!SUPABASE_ENABLED || !supabase) return demoDb.createExam(data)
+  if (!SUPABASE_ENABLED || !supabase) return globalDb.createExam(data)
   const { data: result, error } = await supabase.from('exams').insert(data).select().single()
   if (error) throw new Error(error.message)
   return result as Exam
 }
 
 export async function getExamsByStudent(student_id: string): Promise<Exam[]> {
-  if (!SUPABASE_ENABLED || !supabase) return demoDb.getExamsByStudent(student_id)
+  if (!SUPABASE_ENABLED || !supabase) return globalDb.getExamsByStudent(student_id)
   const { data } = await supabase.from('exams').select('*').eq('student_id', student_id).order('created_at', { ascending: false })
   return (data ?? []) as Exam[]
 }
 
 export async function getExamsByTeacher(teacher_id: string): Promise<Exam[]> {
-  if (!SUPABASE_ENABLED || !supabase) return demoDb.getExamsByTeacher(teacher_id)
+  if (!SUPABASE_ENABLED || !supabase) return globalDb.getExamsByTeacher(teacher_id)
   const { data } = await supabase.from('exams').select('*').eq('teacher_id', teacher_id).order('created_at', { ascending: false })
   return (data ?? []) as Exam[]
 }
