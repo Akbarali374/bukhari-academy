@@ -360,18 +360,21 @@ class GlobalDatabaseService {
       // Mavjud davomatni yangilash
       db.attendance[existingIndex].status = status
       db.attendance[existingIndex].teacher_id = teacherId
+      db.attendance[existingIndex].updated_at = new Date().toISOString()
       await this.saveToLocal(db)
       return db.attendance[existingIndex]
     } else {
       // Yangi davomat qo'shish
       const id = `attendance-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+      const now = new Date().toISOString()
       const newAttendance: Attendance = {
         id,
         student_id: studentId,
         teacher_id: teacherId,
         date,
         status,
-        created_at: new Date().toISOString()
+        created_at: now,
+        updated_at: now
       }
       
       db.attendance.push(newAttendance)
