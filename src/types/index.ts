@@ -101,12 +101,12 @@ export interface Attendance {
   teacher?: Profile
 }
 
-export interface Attendance {
+export interface Coin {
   id: string
   student_id: string
   teacher_id: string
-  date: string
-  status: 'keldi' | 'kelmadi'
+  amount: number
+  reason: string
   created_at: string
   student?: Profile
   teacher?: Profile

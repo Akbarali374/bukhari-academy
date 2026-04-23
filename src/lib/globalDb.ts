@@ -1,4 +1,4 @@
-import type { Profile, Group, Grade, News, Homework, Comment, Attendance, Payment, TestQuestion, TestAttempt, TestResult, Exam } from '@/types'
+import type { Profile, Group, Grade, News, Homework, Comment, Attendance, Payment, TestQuestion, TestAttempt, TestResult, Exam, Coin } from '@/types'
 
 interface GlobalDatabase {
   profiles: Profile[]
@@ -9,6 +9,7 @@ interface GlobalDatabase {
   comments: Comment[]
   attendance: Attendance[]
   exams: Exam[]
+  coins: Coin[]
   payments: Payment[]
   testQuestions: TestQuestion[]
   testAttempts: TestAttempt[]
@@ -131,6 +132,7 @@ class GlobalDatabaseService {
       comments: [],
       attendance: [],
       exams: [],
+      coins: [],
       payments: [],
       testQuestions: [],
       testAttempts: [],
@@ -452,6 +454,49 @@ class GlobalDatabaseService {
     return db.exams
       .filter(e => e.teacher_id === teacher_id)
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  }
+
+  // Coin functions
+  async addCoin(student_id: string, teacher_id: string, amount: number, reason: string): Promise<Coin> {
+    const db = await this.loadDatabase()
+    if (!db.coins) db.coins = []
+    const id = `coin-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+    const newCoin: Coin = {
+      id,
+      student_id,
+      teacher_id,
+      amount,
+      reason,
+      created_at: new Date().toISOString()
+    }
+    db.coins.push(newCoin)
+    await this.saveToLocal(db)
+    return newCoin
+  }
+
+  async removeCoin(coinId: string): Promise<void> {
+    const db = await this.loadDatabase()
+    if (!db.coins) return
+    db.coins = db.coins.filter(c => c.id !== coinId)
+    await this.saveToLocal(db)
+  }
+
+  async getCoinsByStudent(student_id: string): Promise<Coin[]> {
+    const db = await this.loadDatabase()
+    if (!db.coins) return []
+    return db.coins
+      .filter(c => c.student_id === student_id)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  }
+
+  async getAllCoins(): Promise<Coin[]> {
+    const db = await this.loadDatabase()
+    return (db.coins || []).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  }
+
+  async getCoinTotal(student_id: string): Promise<number> {
+    const coins = await this.getCoinsByStudent(student_id)
+    return coins.reduce((sum, c) => sum + c.amount, 0)
   }
 
   // Delete functions
